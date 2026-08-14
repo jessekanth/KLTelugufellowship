@@ -159,7 +159,7 @@ body {
 }
 .nav-item:hover { background: var(--surface-alt); color: var(--text); }
 .nav-item:active { transform: scale(0.98); }
-.nav-item.active { background: var(--accent); color: #fff; font-weight: 600; box-shadow: 0 6px 16px rgba(23, 178, 106, 0.28); }
+.nav-item.active { background: var(--accent) !important; color: #fff !important; font-weight: 600; box-shadow: 0 6px 16px rgba(23, 178, 106, 0.28); }
 .logout-btn { margin-top: auto; }
 .sidebar .btn-ghost { border-color: var(--line); color: var(--text-dim); }
 .sidebar .btn-ghost:hover { color: var(--text); border-color: var(--accent); background: var(--accent-soft); }
@@ -262,12 +262,11 @@ body {
 .stat-icon.blue   { background: #e8f0fe; color: #3266d6; }
 .stat-icon.amber  { background: #fff6e6; color: #b3760b; }
 .stat-icon.neutral{ background: var(--surface-alt); color: var(--text-dim); }
-@media (prefers-color-scheme: dark) {
-  .stat-icon.blue  { background: #16233f; color: #7fa2ff; }
-  .stat-icon.amber { background: #2a2210; color: #e8c777; }
-}
+/* App always runs in dark mode (class="dark" on <html>); use dark palette unconditionally */
+.stat-icon.blue   { background: #16233f; color: #7fa2ff; }
+.stat-icon.amber  { background: #2a2210; color: #e8c777; }
 .stat-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
-.stat-value { font-size: clamp(20px, 2vw, 25px); font-weight: 700; letter-spacing: -0.01em; }
+.stat-value { font-size: clamp(20px, 2vw, 25px); font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
 .stat-value.positive { color: var(--accent-dark); }
 .stat-value.negative { color: var(--danger); }
 
@@ -479,24 +478,47 @@ td.amount { font-weight: 600; }
 }
 
 @media (max-width: 800px) {
-  .app-shell { flex-direction: column; }
+  .app-shell { flex-direction: column !important; }
   .sidebar {
-    width: 100%; height: auto; position: sticky; top: 0;
-    flex-direction: row; align-items: center; gap: 8px;
-    overflow-x: auto; padding: 10px 12px;
+    width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
+    position: sticky !important;
+    top: 0 !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 12px !important;
+    overflow-x: auto !important;
+    padding: 8px 16px !important;
+    border-right: none !important;
+    border-b: 1px solid var(--line) !important;
+    z-index: 40 !important;
   }
-  /* Hide brand lockup and profile/logout buttons in mobile top nav */
-  .sidebar .brand,
-  .sidebar .profile-btn,
+  .sidebar > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    overflow-x: auto !important;
+    flex: 1 !important;
+  }
+  .sidebar > div:last-child {
+    margin-top: 0 !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    flex: none !important;
+  }
+  /* Hide brand lockup in mobile top nav; keep profile/logout accessible */
+  .sidebar .brand { display: none !important; }
   .sidebar .logout-btn { display: none !important; }
-  .nav-list { display: flex; margin: 0; flex: none; flex-direction: row; }
-  .nav-item { white-space: nowrap; padding: 9px 12px; font-size: 13px; }
-  .content { padding: 16px 18px 24px; }
-  .content-header { margin: 0 -18px 20px; padding: 18px 18px 14px; position: static; }
-  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-  .form-card { grid-template-columns: 1fr; padding: 18px; }
-  table { font-size: 12.5px; }
-  th, td { padding: 10px; }
+  .sidebar .profile-btn { display: flex !important; padding: 7px 12px !important; font-size: 12px !important; white-space: nowrap !important; margin-top: 0 !important; margin-bottom: 0 !important; }
+  .nav-list { display: flex !important; margin: 0 !important; flex: none !important; flex-direction: row !important; gap: 4px !important; }
+  .nav-item { white-space: nowrap !important; padding: 8px 12px !important; font-size: 13px !important; }
+  .content { padding: 16px 18px 24px !important; }
+  .content-header { margin: 0 -18px 20px !important; padding: 18px 18px 14px !important; position: static !important; }
+  .stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; }
+  .form-card { grid-template-columns: 1fr !important; padding: 18px !important; }
+  table { font-size: 12.5px !important; }
+  th, td { padding: 10px !important; }
 }
 
 @media (max-width: 480px) {

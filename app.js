@@ -447,11 +447,25 @@ function setEditTarget(form, groupId) {
 // ================= SUMMARY (with charts + PDF export) =================
 async function renderSummary(root) {
   const { data: cfg } = await sb.from("config").select("*").single();
-  const year = cfg.active_financial_year;
+  const defaultYear = cfg.active_financial_year;
+
+  // Query distinct years available in database to build the year manual dropdown
+  const { data: yearsList } = await sb.from("v_year_summary").select("year").order("year", { ascending: false });
+  let years = (yearsList || []).map(r => Number(r.year));
+  if (!years.includes(defaultYear)) {
+    years.push(defaultYear);
+  }
+  years = Array.from(new Set(years)).sort((a, b) => b - a);
+
+  if (!window._summarySelectedYear) {
+    window._summarySelectedYear = defaultYear;
+  }
+  const year = window._summarySelectedYear;
+
   const { data: sum } = await sb.from("v_year_summary").select("*").eq("year", year).maybeSingle();
   const { data: ppf } = await sb.from("v_ppf_summary").select("*").eq("year", year).maybeSingle();
-  const net = sum?.net_balance ?? cfg.opening_balance;
-  const ppfBal = ppf?.balance ?? cfg.ppf_opening_balance;
+  const net = sum?.net_balance ?? (year === defaultYear ? cfg.opening_balance : 0);
+  const ppfBal = ppf?.balance ?? (year === defaultYear ? cfg.ppf_opening_balance : 0);
 
   const { data: offRows } = await sb.from("offerings").select("date,amount").eq("is_latest", true).eq("year", year);
   const { data: expRows } = await sb.from("expenses").select("date,amount,category").eq("is_latest", true).eq("year", year);
@@ -460,9 +474,16 @@ async function renderSummary(root) {
   const { data: ppfClaimRows } = await sb.from("ppf_claims").select("date,amount").eq("is_latest", true).eq("year", year);
 
   root.innerHTML = `
+    <div class="form-card" style="margin-bottom:20px; max-width:320px">
+      <label>Choose Summary Year
+        <select id="summaryYearSelect">
+          ${years.map(y => `<option value="${y}" ${y === year ? "selected" : ""}>${y}</option>`).join("")}
+        </select>
+      </label>
+    </div>
     <div class="stat-grid">
       ${statCard("Active Year", year, "", "calendar", "blue")}
-      ${statCard("Carry Forward Balance", fmtRM(cfg.opening_balance), "", "wallet", "neutral")}
+      ${statCard("Carry Forward Balance", fmtRM(year === defaultYear ? cfg.opening_balance : 0), "", "wallet", "neutral")}
       ${statCard("Total Offerings", fmtRM(sum?.total_offerings), "", "trendUp", "green")}
       ${statCard("Total Expenses", fmtRM(sum?.total_expenses), "", "trendDown", "red")}
       ${statCard("Net Balance", fmtRM(net), net >= 0 ? "positive" : "negative", "scale", net >= 0 ? "green" : "red")}
@@ -529,6 +550,11 @@ async function renderSummary(root) {
   });
 
   $("#exportPdfBtn").addEventListener("click", () => exportSummaryPDF({ year, sum, ppfBal, catTotals }));
+
+  $("#summaryYearSelect").addEventListener("change", (e) => {
+    window._summarySelectedYear = Number(e.target.value);
+    renderView("summary");
+  });
 }
 
 function exportSummaryPDF({ year, sum, ppfBal, catTotals }) {
