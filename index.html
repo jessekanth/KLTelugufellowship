@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>KLTF Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand">
+        <span class="brand-mark">KL</span>
+        <div>
+          <div class="brand-name">KLTF Finance</div>
+          <div class="brand-sub">KL Telugu Fellowship</div>
+        </div>
+      </div>
+      <form id="loginForm">
+        <label>Email
+          <input type="email" id="loginEmail" required autocomplete="username" />
+        </label>
+        <label>Password
+          <input type="password" id="loginPassword" required autocomplete="current-password" />
+        </label>
+        <button type="submit" class="btn-primary">Sign in</button>
+        <p id="loginError" class="error-text"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== APP SHELL ===== -->
+  <div id="appShell" class="app-shell hidden">
+    <nav class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">KL</span>
+        <div>
+          <div class="brand-name">KLTF Finance</div>
+          <div class="brand-sub" id="userRoleLabel">—</div>
+        </div>
+      </div>
+      <ul class="nav-list">
+        <li data-view="summary" class="nav-item active">Summary</li>
+        <li data-view="offerings" class="nav-item">Offerings</li>
+        <li data-view="expenses" class="nav-item">Expenses</li>
+        <li data-view="ppf" class="nav-item">Poor People Fund</li>
+        <li data-view="members" class="nav-item">Members</li>
+        <li data-view="statement" class="nav-item">Statement</li>
+        <li data-view="compare" class="nav-item">Compare Years</li>
+        <li data-view="audit" class="nav-item">Audit Log</li>
+        <li data-view="settings" class="nav-item" id="navSettings">Settings</li>
+      </ul>
+      <button id="logoutBtn" class="btn-ghost logout-btn">Sign out</button>
+    </nav>
+
+    <main class="content">
+      <header class="content-header">
+        <h1 id="viewTitle">Summary</h1>
+        <div id="viewSubtitle" class="view-subtitle"></div>
+      </header>
+      <div id="viewRoot" class="view-root"><!-- rendered per view --></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- ===== EDIT MODAL (shared) ===== -->
+  <div id="editModal" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="editModalTitle">Edit entry</h3>
+        <button class="btn-ghost" onclick="closeEditModal()">✕</button>
+      </div>
+      <div id="editModalBody"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
