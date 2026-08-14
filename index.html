@@ -1,81 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>KLTF Finance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          slate: {
+            850: '#1e293b',
+            950: '#090d16',
+          },
+          emerald: {
+            500: '#10b981',
+            600: '#059669',
+          }
+        },
+        borderRadius: {
+          'xl': '12px',
+          '2xl': '16px',
+        }
+      }
+    }
+  }
+</script>
 <link rel="stylesheet" href="styles.css" />
+<style>
+  /* Extra Tailwind utility tuning to overlay seamlessly over existing styles */
+  .modal-overlay { background: rgba(2, 6, 23, 0.6) !important; backdrop-filter: blur(8px) !important; }
+</style>
 </head>
-<body>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen">
 
   <!-- ===== LOGIN SCREEN ===== -->
-  <div id="loginScreen" class="login-screen">
-    <div class="login-card">
-      <div class="brand">
-        <span class="brand-mark">KL</span>
+  <div id="loginScreen" class="login-screen min-h-screen flex items-center justify-center p-6 bg-slate-950 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+    <div class="login-card w-full max-w-[380px] bg-slate-900/90 border border-slate-800/80 rounded-2xl p-8 shadow-2xl backdrop-blur-md">
+      <div class="brand flex items-center gap-3 mb-8">
+        <span class="brand-mark w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-emerald-500/20">KL</span>
         <div>
-          <div class="brand-name">KLTF Finance</div>
-          <div class="brand-sub">KL Telugu Fellowship</div>
+          <div class="brand-name text-slate-100 font-bold text-lg tracking-tight">KLTF Finance</div>
+          <div class="brand-sub text-slate-400 text-xs">KL Telugu Fellowship</div>
         </div>
       </div>
-      <form id="loginForm">
-        <label>Email
-          <input type="email" id="loginEmail" required autocomplete="username" />
+      <form id="loginForm" class="flex flex-col gap-5">
+        <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Email Address
+          <input type="email" id="loginEmail" required autocomplete="username" class="mt-2 block w-full px-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" placeholder="admin@kltf.test" />
         </label>
-        <label>Password
-          <input type="password" id="loginPassword" required autocomplete="current-password" />
+        <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Password
+          <input type="password" id="loginPassword" required autocomplete="current-password" class="mt-2 block w-full px-4 py-3 bg-slate-950/80 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" placeholder="••••••••" />
         </label>
-        <button type="submit" class="btn-primary">Sign in</button>
-        <p id="loginError" class="error-text"></p>
+        <button type="submit" class="btn-primary w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-150">Sign in</button>
+        <p id="loginError" class="error-text text-red-400 text-xs text-center min-h-[16px]"></p>
       </form>
     </div>
   </div>
 
   <!-- ===== APP SHELL ===== -->
-  <div id="appShell" class="app-shell hidden">
-    <nav class="sidebar">
-      <div class="brand">
-        <span class="brand-mark">KL</span>
-        <div>
-          <div class="brand-name">KLTF Finance</div>
-          <div class="brand-sub" id="userRoleLabel">—</div>
+  <div id="appShell" class="app-shell hidden flex min-h-screen bg-slate-950">
+    <nav class="sidebar w-64 bg-slate-900 border-r border-slate-800/80 p-6 flex flex-col justify-between sticky top-0 h-screen z-40">
+      <div>
+        <div class="brand flex items-center gap-3 mb-8">
+          <span class="brand-mark w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-400 text-white flex items-center justify-center font-bold text-sm shadow-lg shadow-emerald-500/20">KL</span>
+          <div>
+            <div class="brand-name text-slate-100 font-bold text-base tracking-tight">KLTF Finance</div>
+            <div class="brand-sub text-emerald-400 text-xs font-medium uppercase tracking-wider" id="userRoleLabel">—</div>
+          </div>
         </div>
+        <ul class="nav-list flex flex-col gap-1 list-none p-0 m-0">
+          <li data-view="summary" class="nav-item active px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Summary</li>
+          <li data-view="offerings" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Offerings</li>
+          <li data-view="expenses" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Expenses</li>
+          <li data-view="ppf" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Poor People Fund</li>
+          <li data-view="members" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Members</li>
+          <li data-view="statement" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Statement</li>
+          <li data-view="compare" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Compare Years</li>
+          <li data-view="audit" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3">Audit Log</li>
+          <li data-view="settings" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3" id="navSettings">Settings</li>
+          <li data-view="users" class="nav-item px-4 py-3 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-slate-800/50 cursor-pointer font-medium text-sm transition-all duration-150 flex items-center gap-3" id="navUsers">User Management</li>
+        </ul>
       </div>
-      <ul class="nav-list">
-        <li data-view="summary" class="nav-item active">Summary</li>
-        <li data-view="offerings" class="nav-item">Offerings</li>
-        <li data-view="expenses" class="nav-item">Expenses</li>
-        <li data-view="ppf" class="nav-item">Poor People Fund</li>
-        <li data-view="members" class="nav-item">Members</li>
-        <li data-view="statement" class="nav-item">Statement</li>
-        <li data-view="compare" class="nav-item">Compare Years</li>
-        <li data-view="audit" class="nav-item">Audit Log</li>
-        <li data-view="settings" class="nav-item" id="navSettings">Settings</li>
-      </ul>
-      <button id="logoutBtn" class="btn-ghost logout-btn">Sign out</button>
+      <div class="flex flex-col gap-2 mt-8">
+        <button id="profileBtn" class="btn-ghost profile-btn w-full py-2.5 px-4 bg-transparent border border-slate-800 text-slate-400 hover:text-slate-100 hover:border-slate-700 active:scale-[0.98] font-medium text-xs rounded-xl transition-all duration-150">My Profile</button>
+        <button id="logoutBtn" class="btn-ghost logout-btn w-full py-2.5 px-4 bg-transparent border border-slate-800 text-slate-400 hover:text-red-400 hover:border-red-500/30 hover:bg-red-500/5 active:scale-[0.98] font-medium text-xs rounded-xl transition-all duration-150">Sign out</button>
+      </div>
     </nav>
 
-    <main class="content">
-      <header class="content-header">
-        <h1 id="viewTitle">Summary</h1>
-        <div id="viewSubtitle" class="view-subtitle"></div>
+    <main class="content flex-1 p-10 max-w-[1220px] min-w-0 bg-slate-950">
+      <header class="content-header mb-8 pb-6 border-b border-slate-800/80">
+        <h1 id="viewTitle" class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">Summary</h1>
+        <div id="viewSubtitle" class="view-subtitle text-slate-400 text-sm mt-1"></div>
       </header>
       <div id="viewRoot" class="view-root"><!-- rendered per view --></div>
     </main>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div id="toast" class="toast hidden fixed bottom-6 right-6 px-5 py-3 bg-slate-900 border border-slate-800 text-slate-200 text-sm rounded-xl shadow-2xl z-50 animate-bounce"></div>
 
   <!-- ===== EDIT MODAL (shared) ===== -->
-  <div id="editModal" class="modal-overlay hidden">
-    <div class="modal-card">
-      <div class="modal-head">
-        <h3 id="editModalTitle">Edit entry</h3>
-        <button class="btn-ghost" onclick="closeEditModal()">✕</button>
+  <div id="editModal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div class="modal-card w-full max-w-[560px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="modal-head flex justify-between items-center px-6 py-4 border-b border-slate-800">
+        <h3 id="editModalTitle" class="text-base font-bold text-slate-100">Edit entry</h3>
+        <button class="btn-ghost text-slate-400 hover:text-slate-100" onclick="closeEditModal()">✕</button>
       </div>
-      <div id="editModalBody"></div>
+      <div id="editModalBody" class="p-6"></div>
+    </div>
+  </div>
+
+  <!-- ===== MY PROFILE MODAL ===== -->
+  <div id="profileModal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div class="modal-card w-full max-w-[500px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="modal-head flex justify-between items-center px-6 py-4 border-b border-slate-800">
+        <h3 class="text-base font-bold text-slate-100">My Profile</h3>
+        <button class="btn-ghost text-slate-400 hover:text-slate-100" id="closeProfileModalBtn">✕</button>
+      </div>
+      <div class="modal-body p-6">
+        <div class="grid grid-cols-3 gap-y-3 gap-x-4 text-sm bg-slate-950/50 p-4 rounded-xl border border-slate-800/60 mb-6">
+          <div class="text-slate-400 font-medium">Email:</div>
+          <div class="col-span-2 text-slate-200 font-semibold" id="profileEmailVal">—</div>
+          <div class="text-slate-400 font-medium">Name:</div>
+          <div class="col-span-2 text-slate-200 font-semibold" id="profileNameVal">—</div>
+          <div class="text-slate-400 font-medium">Role:</div>
+          <div class="col-span-2 text-slate-200 font-semibold" id="profileRoleVal">—</div>
+        </div>
+        <h4 style="margin: 15px 0 10px; font-size:14px; font-weight:600; color:var(--text)" class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3">Change Password</h4>
+        <form id="profilePasswordForm" class="form-card flex flex-col gap-4">
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">New Password
+            <input type="password" id="profileNewPass" required minlength="6" autocomplete="new-password" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Confirm New Password
+            <input type="password" id="profileConfirmPass" required minlength="6" autocomplete="new-password" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <button type="submit" class="btn-primary py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/10 transition-all duration-150">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: ADD USER MODAL ===== -->
+  <div id="addUserModal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div class="modal-card w-full max-w-[500px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="modal-head flex justify-between items-center px-6 py-4 border-b border-slate-800">
+        <h3 class="text-base font-bold text-slate-100">Onboard New User</h3>
+        <button class="btn-ghost text-slate-400 hover:text-slate-100" id="closeAddUserModalBtn">✕</button>
+      </div>
+      <div class="modal-body p-6">
+        <form id="addUserForm" class="form-card flex flex-col gap-4">
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Full Name
+            <input type="text" id="addUserName" required placeholder="John Doe" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Email Address
+            <input type="email" id="addUserEmail" required placeholder="user@kltf.test" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Assigned Role
+            <select id="addUserRole" required class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150">
+              <option value="viewer">Viewer</option>
+              <option value="treasurer">Treasurer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">Initial Password
+            <input type="password" id="addUserPassword" required minlength="6" autocomplete="new-password" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <button type="submit" class="btn-primary py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/10 transition-all duration-150">Create User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ADMIN: RESET USER PASSWORD MODAL ===== -->
+  <div id="adminResetPassModal" class="modal-overlay hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
+    <div class="modal-card w-full max-w-[500px] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="modal-head flex justify-between items-center px-6 py-4 border-b border-slate-800">
+        <h3 class="text-base font-bold text-slate-100">Reset User Password</h3>
+        <button class="btn-ghost text-slate-400 hover:text-slate-100" id="closeResetPassModalBtn">✕</button>
+      </div>
+      <div class="modal-body p-6">
+        <p style="margin-bottom:15px; font-size:13px; color:var(--text-dim)" class="text-slate-400 text-sm mb-4">
+          Resetting password for user: <strong id="resetPassUserEmail" class="text-slate-200 font-semibold">—</strong>
+        </p>
+        <form id="adminResetPassForm" class="form-card flex flex-col gap-4">
+          <input type="hidden" id="resetPassUserId" />
+          <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">New Password
+            <input type="password" id="resetPassNewPass" required minlength="6" autocomplete="new-password" class="mt-2 block w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-slate-200 text-sm focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all duration-150" />
+          </label>
+          <button type="submit" class="btn-primary py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-xl shadow-lg shadow-emerald-500/10 transition-all duration-150">Save New Password</button>
+        </form>
+      </div>
     </div>
   </div>
 

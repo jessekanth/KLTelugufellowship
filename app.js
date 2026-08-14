@@ -17,6 +17,85 @@ function toast(msg, isError = false) {
 function fmtRM(n) { return "RM " + Number(n || 0).toLocaleString("en-MY", { minimumFractionDigits: 2 }); }
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 
+// ---------- combo-select helpers ----------
+// Renders a <select> + a hidden manual <input> for the same field.
+// The <select> uses name "__NAME_combo" so FormData only picks up the
+// real <input name="NAME"> whose display is toggled by JS.
+function comboSelectHTML(name, options, placeholder = "— select —") {
+  const opts = options.map(o => {
+    const val = typeof o === "object" ? o.name : o;
+    return `<option value="${val}">${val}</option>`;
+  }).join("");
+  return `<div class="combo-wrap" data-combo="${name}">
+    <select name="__${name}_combo" class="combo-select">
+      <option value="">${placeholder}</option>
+      ${opts}
+      <option value="__manual__">✏ Type manually…</option>
+    </select>
+    <input type="text" name="${name}" class="combo-manual" placeholder="Enter custom value…" style="display:none" />
+  </div>`;
+}
+
+// Wire up toggle behaviour for every combo-wrap inside container.
+function initComboSelects(container) {
+  (container || document).querySelectorAll('.combo-wrap').forEach(wrap => {
+    const sel = wrap.querySelector('.combo-select');
+    const inp = wrap.querySelector('.combo-manual');
+    if (!sel || !inp) return;
+    const name = wrap.dataset.combo;
+    sel.addEventListener('change', () => {
+      if (sel.value === '__manual__') {
+        inp.style.display = '';
+        inp.required = sel.closest('label, form') ? false : false; // manual input optional unless parent required
+        inp.focus();
+        // Remove the select's name so FormData only reads the text input
+        sel.name = `__${name}_combo_disabled`;
+        inp.name = name;
+      } else {
+        inp.style.display = 'none';
+        inp.value = '';
+        sel.name = `__${name}_combo`;
+        inp.name = name;
+        // Mirror select value into the text input so FormData picks up correct value
+        inp.value = sel.value;
+      }
+    });
+    // Ensure initial mirror on load
+    if (sel.value && sel.value !== '__manual__') inp.value = sel.value;
+  });
+}
+
+// Fill-back a combo field when editing: if value matches an option use the
+// select, otherwise switch to manual input.
+function setComboValue(container, name, value) {
+  const wrap = container.querySelector(`.combo-wrap[data-combo="${name}"]`);
+  if (!wrap) {
+    // Fallback for plain selects that haven't been converted
+    const el = container.querySelector(`[name="${name}"]`);
+    if (el) el.value = value || '';
+    return;
+  }
+  const sel = wrap.querySelector('.combo-select');
+  const inp = wrap.querySelector('.combo-manual');
+  if (!sel || !inp) return;
+  // Check if value is one of the preset options
+  const match = [...sel.options].find(o => o.value === value && o.value !== '__manual__' && o.value !== '');
+  if (match) {
+    sel.value = value;
+    sel.name = `__${name}_combo`;
+    inp.name = name;
+    inp.value = value;
+    inp.style.display = 'none';
+  } else {
+    // Switch to manual mode
+    sel.value = '__manual__';
+    sel.name = `__${name}_combo_disabled`;
+    inp.name = name;
+    inp.value = value || '';
+    inp.style.display = '';
+  }
+}
+
 // ---------- stat-card icons ----------
 const ICONS = {
   calendar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
@@ -80,7 +159,13 @@ async function bootAfterLogin() {
   $("#loginScreen").classList.add("hidden");
   $("#appShell").classList.remove("hidden");
   $("#userRoleLabel").textContent = profile.role.charAt(0).toUpperCase() + profile.role.slice(1);
-  if (profile.role !== "admin") $("#navSettings").classList.add("hidden");
+  if (profile.role !== "admin") {
+    $("#navSettings").classList.add("hidden");
+    $("#navUsers").classList.add("hidden");
+  } else {
+    $("#navSettings").classList.remove("hidden");
+    $("#navUsers").classList.remove("hidden");
+  }
   if (profile.role === "viewer") {
     $$(".nav-item").forEach(n => {
       if (!["summary", "statement"].includes(n.dataset.view)) n.classList.add("hidden");
@@ -92,6 +177,115 @@ async function bootAfterLogin() {
 (async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (session) await bootAfterLogin();
+
+  // "My Profile" modal event listeners
+  const profileBtn = $("#profileBtn");
+  if (profileBtn) {
+    profileBtn.addEventListener("click", async () => {
+      const { data: { user } } = await sb.auth.getUser();
+      if (!user) return toast("Not signed in", true);
+      $("#profileEmailVal").textContent = user.email;
+      $("#profileNameVal").textContent = profile?.full_name || "—";
+      $("#profileRoleVal").textContent = profile?.role ? (profile.role.charAt(0).toUpperCase() + profile.role.slice(1)) : "—";
+      $("#profileNewPass").value = "";
+      $("#profileConfirmPass").value = "";
+      $("#profileModal").classList.remove("hidden");
+    });
+  }
+
+  const closeProfileModalBtn = $("#closeProfileModalBtn");
+  if (closeProfileModalBtn) {
+    closeProfileModalBtn.addEventListener("click", () => {
+      $("#profileModal").classList.add("hidden");
+    });
+  }
+
+  const profilePasswordForm = $("#profilePasswordForm");
+  if (profilePasswordForm) {
+    profilePasswordForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const newPass = $("#profileNewPass").value;
+      const confirmPass = $("#profileConfirmPass").value;
+      if (newPass !== confirmPass) {
+        return toast("Passwords do not match", true);
+      }
+      const { error } = await sb.auth.updateUser({ password: newPass });
+      if (error) {
+        return toast("Failed to update password: " + error.message, true);
+      }
+      toast("Password updated successfully");
+      writeAudit("Password Changed Self", { email: profile?.email });
+      $("#profileModal").classList.add("hidden");
+    });
+  }
+
+  // Admin Add User Modal listeners
+  const closeAddUserModalBtn = $("#closeAddUserModalBtn");
+  if (closeAddUserModalBtn) {
+    closeAddUserModalBtn.addEventListener("click", () => {
+      $("#addUserModal").classList.add("hidden");
+    });
+  }
+
+  const addUserForm = $("#addUserForm");
+  if (addUserForm) {
+    addUserForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const full_name = $("#addUserName").value.trim();
+      const email = $("#addUserEmail").value.trim();
+      const role = $("#addUserRole").value;
+      const password = $("#addUserPassword").value;
+      
+      toast("Onboarding user...");
+      try {
+        const { data, error } = await sb.functions.invoke("user-management", {
+          body: { action: "add-user", email, password, full_name, role }
+        });
+        if (error) throw error;
+        if (data && data.error) throw new Error(data.error);
+
+        toast("User onboarded successfully!");
+        writeAudit("User Onboarded", { email, role, name: full_name });
+        $("#addUserModal").classList.add("hidden");
+        if (activeView === "users") renderView("users");
+      } catch (err) {
+        toast("Failed to onboard user: " + err.message, true);
+      }
+    });
+  }
+
+  // Admin Reset User Password Modal listeners
+  const closeResetPassModalBtn = $("#closeResetPassModalBtn");
+  if (closeResetPassModalBtn) {
+    closeResetPassModalBtn.addEventListener("click", () => {
+      $("#adminResetPassModal").classList.add("hidden");
+    });
+  }
+
+  const adminResetPassForm = $("#adminResetPassForm");
+  if (adminResetPassForm) {
+    adminResetPassForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = $("#resetPassUserId").value;
+      const email = $("#resetPassUserEmail").textContent;
+      const password = $("#resetPassNewPass").value;
+
+      toast("Resetting password...");
+      try {
+        const { data, error } = await sb.functions.invoke("user-management", {
+          body: { action: "change-password", id, password }
+        });
+        if (error) throw error;
+        if (data && data.error) throw new Error(data.error);
+
+        toast("Password reset successfully!");
+        writeAudit("User Password Reset by Admin", { email });
+        $("#adminResetPassModal").classList.add("hidden");
+      } catch (err) {
+        toast("Failed to reset password: " + err.message, true);
+      }
+    });
+  }
 })();
 
 // ---------- nav ----------
@@ -115,7 +309,8 @@ const VIEW_TITLES = {
   statement: ["Statement", "Transactions for a chosen date range — shareable & printable"],
   compare: ["Compare Years", "Side-by-side financial comparison"],
   audit: ["Audit Log", "Last 100 actions"],
-  settings: ["Settings", "Fund configuration & dropdown lists"]
+  settings: ["Settings", "Fund configuration & dropdown lists"],
+  users: ["User Management", "Add, delete or update user accounts and reset passwords"]
 };
 
 // Navigate to a view that isn't in the sidebar (e.g. a "View all records" page)
@@ -148,6 +343,7 @@ async function renderView(view) {
     else if (view === "compare") await renderCompare(root);
     else if (view === "audit") await renderAudit(root);
     else if (view === "settings") await renderSettings(root);
+    else if (view === "users") await renderUsers(root);
   } catch (err) {
     root.innerHTML = `<p style="color:var(--danger)">Error: ${err.message}</p>`;
   }
@@ -388,11 +584,11 @@ async function renderOfferings(root) {
     <form id="offeringForm" class="form-card">
       ${editBanner("offering")}
       <label>Date<input type="date" name="date" value="${todayStr()}" required /></label>
-      <label>Type<select name="offering_type">${types.map(t => `<option>${t}</option>`).join("")}</select></label>
+      <label>Type${comboSelectHTML("offering_type", types, "— select type —")}</label>
       <label>Amount (RM)<input type="number" step="0.01" name="amount" data-linked="off" required /></label>
-      <label>Counted By<select name="counted_by"><option value="">— select —</option>${counters.map(c => `<option>${c}</option>`).join("")}</select></label>
+      <label>Counted By${comboSelectHTML("counted_by", counters, "— select —")}</label>
       <label>Attendance<input type="number" name="attendance" /></label>
-      <label>Pastor<select name="pastor_name"><option value="">— none —</option>${pastors.map(p => `<option>${p.name}</option>`).join("")}</select></label>
+      <label>Pastor${comboSelectHTML("pastor_name", pastors, "— none —")}</label>
       <label>Pastor Payment (RM)<input type="number" step="0.01" name="pastor_payment" /></label>
       ${denomCalcHTML("off")}
       <div class="full-row"><button class="btn-secondary" type="submit">Save Offering</button></div>
@@ -406,7 +602,7 @@ async function renderOfferings(root) {
       <tbody id="offeringsBody"><tr><td colspan="7" class="loading-text">Loading…</td></tr></tbody>
     </table></div>`;
 
-  if (canWrite()) attachOfferingForm(root, cfg);
+  if (canWrite()) { attachOfferingForm(root, cfg); initComboSelects($("#offeringForm")); }
 
   const { data: rows, error } = await sb.from("offerings").select("*")
     .eq("is_latest", true).order("date", { ascending: false }).limit(5);
@@ -504,11 +700,11 @@ window.editOffering = function (r) {
   $("#offFormTitle").textContent = "Edit Offering";
   const form = $("#offeringForm");
   form.querySelector('[name="date"]').value = r.date;
-  form.querySelector('[name="offering_type"]').value = r.offering_type;
+  setComboValue(form, "offering_type", r.offering_type);
   form.querySelector('[name="amount"]').value = r.amount;
-  form.querySelector('[name="counted_by"]').value = r.counted_by || "";
+  setComboValue(form, "counted_by", r.counted_by || "");
   form.querySelector('[name="attendance"]').value = r.attendance || "";
-  if (form.querySelector('[name="pastor_name"]')) form.querySelector('[name="pastor_name"]').value = r.pastor_name || "";
+  setComboValue(form, "pastor_name", r.pastor_name || "");
   form.querySelector('[name="pastor_payment"]').value = r.pastor_payment || "";
   fillDenomInputs("off", r.denominations);
   setEditTarget(form, r.group_id);
@@ -526,7 +722,7 @@ async function renderExpenses(root) {
     <form id="expenseForm" class="form-card">
       ${editBanner("expense")}
       <label>Date<input type="date" name="date" value="${todayStr()}" required /></label>
-      <label>Category<select name="category">${cats.map(c => `<option>${c}</option>`).join("")}</select></label>
+      <label>Category${comboSelectHTML("category", cats, "— select category —")}</label>
       <label>Amount (RM)<input type="number" step="0.01" name="amount" required /></label>
       <label class="full-row">Description<input type="text" name="description" /></label>
       <div class="full-row"><button class="btn-secondary" type="submit">Save Expense</button></div>
@@ -542,6 +738,7 @@ async function renderExpenses(root) {
 
   if (canWrite()) {
     const form = $("#expenseForm");
+    initComboSelects(form);
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       const f = new FormData(e.target);
@@ -620,7 +817,7 @@ window.editExpense = function (r) {
   $("#expFormTitle").textContent = "Edit Expense";
   const form = $("#expenseForm");
   form.querySelector('[name="date"]').value = r.date;
-  form.querySelector('[name="category"]').value = r.category;
+  setComboValue(form, "category", r.category);
   form.querySelector('[name="amount"]').value = r.amount;
   form.querySelector('[name="description"]').value = r.description || "";
   setEditTarget(form, r.group_id);
@@ -640,7 +837,7 @@ async function renderPPF(root) {
       ${editBanner("PPF collection")}
       <label>Date<input type="date" name="date" value="${todayStr()}" required /></label>
       <label>Amount (RM)<input type="number" step="0.01" name="amount" data-linked="ppfcol" required /></label>
-      <label>Counted By<select name="counted_by"><option value="">— select —</option>${counters.map(c => `<option>${c}</option>`).join("")}</select></label>
+      <label>Counted By${comboSelectHTML("counted_by", counters, "— select —")}</label>
       ${denomCalcHTML("ppfcol")}
       <div class="full-row"><button class="btn-secondary" type="submit">Save Collection</button></div>
     </form>
@@ -649,7 +846,7 @@ async function renderPPF(root) {
       ${editBanner("PPF claim")}
       <label>Date<input type="date" name="date" value="${todayStr()}" required /></label>
       <label>Beneficiary<input type="text" name="beneficiary" required /></label>
-      <label>Purpose<select name="purpose">${purposes.map(p => `<option>${p}</option>`).join("")}</select></label>
+      <label>Purpose${comboSelectHTML("purpose", purposes, "— select purpose —")}</label>
       <label>Amount (RM)<input type="number" step="0.01" name="amount" required /></label>
       <label class="full-row">Description<input type="text" name="description" /></label>
       <div class="full-row"><button class="btn-secondary" type="submit">Save Claim</button></div>
@@ -667,6 +864,9 @@ async function renderPPF(root) {
 
   if (canWrite()) {
     const colForm = $("#ppfColForm");
+    initComboSelects(colForm);
+    const claimFormEl = $("#ppfClaimForm");
+    initComboSelects(claimFormEl);
     colForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const f = new FormData(e.target);
@@ -733,7 +933,7 @@ window.editPPFCol = function (r) {
   const form = $("#ppfColForm");
   form.querySelector('[name="date"]').value = r.date;
   form.querySelector('[name="amount"]').value = r.amount;
-  if (form.querySelector('[name="counted_by"]')) form.querySelector('[name="counted_by"]').value = r.counted_by || "";
+  setComboValue(form, "counted_by", r.counted_by || "");
   fillDenomInputs("ppfcol", r.denominations);
   setEditTarget(form, r.group_id);
   form.scrollIntoView({ behavior: "smooth" });
@@ -743,7 +943,7 @@ window.editPPFClaim = function (r) {
   const form = $("#ppfClaimForm");
   form.querySelector('[name="date"]').value = r.date;
   form.querySelector('[name="beneficiary"]').value = r.beneficiary;
-  form.querySelector('[name="purpose"]').value = r.purpose;
+  setComboValue(form, "purpose", r.purpose);
   form.querySelector('[name="amount"]').value = r.amount;
   form.querySelector('[name="description"]').value = r.description || "";
   setEditTarget(form, r.group_id);
@@ -963,6 +1163,116 @@ async function renderSettings(root) {
   attachTagEditor("counters_list");
   attachPastorEditor();
 }
+
+// ================= USER MANAGEMENT (admin only) =================
+async function renderUsers(root) {
+  if (!isAdmin()) { root.innerHTML = "<p>Admins only.</p>"; return; }
+
+  root.innerHTML = `
+    <div class="section-head">
+      <h2>User Directory</h2>
+      <button class="btn-primary" id="onboardUserBtn">Onboard New User</button>
+    </div>
+    <div class="table-card">
+      <table style="width:100%">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Last Logged In</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody">
+          <tr><td colspan="5" class="loading-text">Loading users…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  const loadAndRenderUsersList = async () => {
+    const tbody = $("#usersTableBody");
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-text">Loading users…</td></tr>`;
+    try {
+      const { data, error } = await sb.functions.invoke("user-management", {
+        body: { action: "list-users" }
+      });
+      if (error) throw error;
+      if (data && data.error) throw new Error(data.error);
+
+      const users = data.users || [];
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="5">No users found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map(u => {
+        const lastSignIn = u.last_sign_in_at
+          ? new Date(u.last_sign_in_at).toLocaleString("en-MY", { dateStyle: "short", timeStyle: "short" })
+          : "<span style='color:var(--text-dim)'>Never</span>";
+        
+        const roleClass = u.role === "admin" ? "tag admin-tag" : (u.role === "treasurer" ? "tag treasurer-tag" : "tag tag-viewer");
+        const isSelf = profile && profile.id === u.id;
+
+        return `
+          <tr>
+            <td><strong>${u.full_name || "—"}</strong></td>
+            <td>${u.email}</td>
+            <td><span class="${roleClass}" style="text-transform: capitalize">${u.role}</span></td>
+            <td>${lastSignIn}</td>
+            <td style="text-align:right; white-space:nowrap">
+              <button class="btn-ghost" onclick="resetUserPassword('${u.id}', '${u.email}')" style="margin-right:5px; padding:4px 8px; font-size:12px;">Reset Password</button>
+              ${isSelf ? `<span style="font-size:12px; color:var(--text-dim); margin-left:10px;">(Current)</span>` : `
+                <button class="btn-danger-ghost" onclick="deleteUserAccount('${u.id}', '${u.email}')" style="padding:4px 8px; font-size:12px;">Delete</button>
+              `}
+            </td>
+          </tr>
+        `;
+      }).join("");
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:var(--danger)">Error loading users: ${err.message}</td></tr>`;
+    }
+  };
+
+  // Onboard User Button click
+  $("#onboardUserBtn").addEventListener("click", () => {
+    $("#addUserName").value = "";
+    $("#addUserEmail").value = "";
+    $("#addUserRole").value = "viewer";
+    $("#addUserPassword").value = "";
+    $("#addUserModal").classList.remove("hidden");
+  });
+
+  await loadAndRenderUsersList();
+}
+
+window.resetUserPassword = function (id, email) {
+  $("#resetPassUserId").value = id;
+  $("#resetPassUserEmail").textContent = email;
+  $("#resetPassNewPass").value = "";
+  $("#adminResetPassModal").classList.remove("hidden");
+};
+
+window.deleteUserAccount = async function (id, email) {
+  if (!confirm(`Are you absolutely sure you want to delete the user account for ${email}? This action CANNOT be undone and will immediately revoke their access.`)) {
+    return;
+  }
+  toast("Deleting user...");
+  try {
+    const { data, error } = await sb.functions.invoke("user-management", {
+      body: { action: "delete-user", id }
+    });
+    if (error) throw error;
+    if (data && data.error) throw new Error(data.error);
+
+    toast("User deleted successfully");
+    writeAudit("User Deleted", { email });
+    renderView("users"); // re-render the view
+  } catch (err) {
+    toast("Failed to delete user: " + err.message, true);
+  }
+};
 
 function tagEditorHTML(key, label, list) {
   list = list || [];

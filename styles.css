@@ -1,34 +1,34 @@
 :root {
-  /* Base palette — TrustVest-style fintech (light, green accent) */
-  --ink: #0f1b14;
-  --paper: #f3f7f4;
-  --card: #ffffff;
-  --line: #e6ece8;
-  --text: #10231a;
-  --text-dim: #6b7d74;
-  --accent: #17b26a;
-  --accent-dark: #0e9e5a;
-  --accent-soft: #eafaf1;
-  --danger: #e0453c;
-  --danger-soft: #fdeeed;
+  /* Premium Dark Mode Professional Palette */
+  --ink: #090d16;          /* Dark space */
+  --paper: #090d16;        /* Deep background slate */
+  --card: #131c2e;         /* Slate 850 surface */
+  --line: #1e293b;         /* Slate 800 border */
+  --text: #f8fafc;         /* Slate 50 clean text */
+  --text-dim: #94a3b8;     /* Slate 400 sub text */
+  --accent: #10b981;       /* Emerald 500 */
+  --accent-dark: #34d399;  /* Emerald 400 */
+  --accent-soft: rgba(16, 185, 129, 0.08);
+  --danger: #f87171;       /* Red 400 */
+  --danger-soft: rgba(239, 68, 68, 0.1);
 
-  --surface-alt: #f7faf8;
+  --surface-alt: #090d16;  /* Slate 950 */
 
-  --chip-bg: #eafaf1;
-  --chip-border: #cdeedb;
-  --chip-text: var(--accent-dark);
-  --banner-bg: #fff6e6;
-  --banner-border: #f2d9a3;
-  --banner-text: #8a5a00;
+  --chip-bg: rgba(16, 185, 129, 0.1);
+  --chip-border: rgba(16, 185, 129, 0.2);
+  --chip-text: #34d399;
+  --banner-bg: #2a2210;
+  --banner-border: #4d3d12;
+  --banner-text: #e8c777;
 
-  --radius: 20px;
-  --radius-lg: 24px;
+  --radius: 16px;
+  --radius-lg: 20px;
   --radius-md: 12px;
-  --radius-sm: 9px;
+  --radius-sm: 8px;
 
-  --shadow-sm: 0 1px 2px rgba(16, 35, 26, 0.05);
-  --shadow-md: 0 8px 24px rgba(16, 35, 26, 0.07);
-  --shadow-lg: 0 18px 44px rgba(16, 35, 26, 0.14);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.5);
 
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 120ms;
@@ -41,20 +41,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #0c120e;
-    --card: #131a15;
-    --line: #232d26;
-    --text: #eaf1ec;
-    --text-dim: #93a49a;
-    --surface-alt: #171f19;
-    --chip-bg: #10281c;
-    --chip-border: #1f4433;
-    --chip-text: #4fdb95;
+    --ink: #090d16;
+    --paper: #090d16;
+    --card: #131c2e;
+    --line: #1e293b;
+    --text: #f8fafc;
+    --text-dim: #94a3b8;
+    --surface-alt: #090d16;
+    --chip-bg: rgba(16, 185, 129, 0.1);
+    --chip-border: rgba(16, 185, 129, 0.2);
+    --chip-text: #34d399;
     --banner-bg: #2a2210;
     --banner-border: #4d3d12;
     --banner-text: #e8c777;
-    --accent-soft: #10281c;
-    --danger-soft: #2a1614;
+    --accent-soft: rgba(16, 185, 129, 0.08);
+    --danger-soft: rgba(239, 68, 68, 0.1);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.5);
@@ -314,6 +315,25 @@ td.amount { font-weight: 600; }
 }
 .form-card .full-row { grid-column: 1 / -1; }
 
+/* combo-select: dropdown + manual text input stacked */
+.combo-wrap { display: flex; flex-direction: column; gap: 0; width: 100%; }
+.combo-wrap .combo-select { margin-top: 6px; }
+.combo-wrap .combo-manual {
+  margin-top: 4px !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+  border-top: none !important;
+  background: var(--surface-alt);
+  color: var(--text);
+  border: 1px solid var(--accent) !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13.5px;
+  padding: 8px 12px;
+}
+.combo-wrap .combo-manual:focus {
+  outline: none; border-color: var(--accent) !important; box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .section-head h2 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
 
@@ -486,4 +506,87 @@ td.amount { font-weight: 600; }
 @media (pointer: coarse) {
   .nav-item, .btn-primary, .btn-secondary, .btn-ghost, .form-card input, .form-card select { min-height: 44px; }
   .tag button, .chip button { padding: 6px; }
+}
+
+
+/* ---------- Profile & User Management Additions ---------- */
+.profile-btn {
+  margin-top: auto;
+  margin-bottom: 8px;
+}
+.profile-btn + .logout-btn {
+  margin-top: 0 !important;
+}
+
+.admin-tag {
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 3px 8px !important;
+}
+
+.treasurer-tag {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #60a5fa !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 3px 8px !important;
+}
+
+.tag-viewer {
+  background: rgba(156, 163, 175, 0.1) !important;
+  border-color: rgba(156, 163, 175, 0.3) !important;
+  color: #d1d5db !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 3px 8px !important;
+}
+
+/* Button ghost dangers (like delete) */
+.btn-danger-ghost {
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur-fast) ease;
+}
+.btn-danger-ghost:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ff8787;
+}
+.btn-danger-ghost:active {
+  transform: scale(0.97);
+}
+
+
+/* ---------- Modal Forms Formatting and Alignment ---------- */
+.modal-overlay form.form-card {
+  grid-template-columns: 1fr !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  align-items: start !important;
+  gap: 16px !important;
+}
+
+.modal-overlay form.form-card label {
+  width: 100%;
+  display: block;
+}
+
+.modal-overlay form.form-card button[type="submit"] {
+  grid-column: 1 / -1;
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  min-height: 40px;
 }
