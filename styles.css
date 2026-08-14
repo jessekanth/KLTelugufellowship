@@ -482,14 +482,17 @@ td.amount { font-weight: 600; }
   .app-shell { flex-direction: column; }
   .sidebar {
     width: 100%; height: auto; position: sticky; top: 0;
-    flex-direction: row; align-items: center; gap: 12px;
-    overflow-x: auto; padding: 14px 16px;
+    flex-direction: row; align-items: center; gap: 8px;
+    overflow-x: auto; padding: 10px 12px;
   }
-  .nav-list { display: flex; margin: 0; flex: none; }
-  .nav-item { white-space: nowrap; }
-  .logout-btn { margin-top: 0; margin-left: auto; flex: none; }
-  .content { padding: 0 18px 24px; }
-  .content-header { margin: 0 -18px 20px; padding: 18px 18px 14px; }
+  /* Hide brand lockup and profile/logout buttons in mobile top nav */
+  .sidebar .brand,
+  .sidebar .profile-btn,
+  .sidebar .logout-btn { display: none !important; }
+  .nav-list { display: flex; margin: 0; flex: none; flex-direction: row; }
+  .nav-item { white-space: nowrap; padding: 9px 12px; font-size: 13px; }
+  .content { padding: 16px 18px 24px; }
+  .content-header { margin: 0 -18px 20px; padding: 18px 18px 14px; position: static; }
   .stat-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
   .form-card { grid-template-columns: 1fr; padding: 18px; }
   table { font-size: 12.5px; }
