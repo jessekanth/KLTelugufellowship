@@ -359,22 +359,50 @@ const NOTES = [100, 50, 20, 10, 5, 1];
 const COINS = [0.50, 0.20, 0.10, 0.05];
 
 function denomCalcHTML(prefix) {
-  const cell = (label, key) => `
-    <div class="denom-cell">
-      <label>${label}</label>
-      <input type="number" min="0" step="1" data-denom="${prefix}" data-key="${key}" value="0" oninput="updateDenomTotal('${prefix}')" />
-    </div>`;
+  const row = (label, key) => `
+    <tr class="denom-row" style="border-bottom: 1px solid var(--line);">
+      <td style="padding: 6px 12px; font-weight: 500;">${label}</td>
+      <td style="padding: 6px 12px; width: 120px;">
+        <input type="number" min="0" step="1" data-denom="${prefix}" data-key="${key}" value="0" oninput="updateDenomTotal('${prefix}')" style="width: 100%; text-align: right; padding: 4px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--text); font-family: inherit; font-size: 13px;" />
+      </td>
+      <td style="padding: 6px 12px; text-align: right; font-weight: 600; width: 150px; font-family: 'IBM Plex Mono', monospace;">
+        <span id="${prefix}-${key}-rowTotal">RM 0.00</span>
+      </td>
+    </tr>`;
+
   return `
-    <div class="denom-box">
-      <div class="denom-title">Cash Count (optional)</div>
-      <div class="denom-grid">
-        ${NOTES.map(n => cell("RM" + n, "N" + n)).join("")}
-        ${COINS.map(c => cell((c * 100) + "c", "C" + c)).join("")}
+    <div class="denom-box" style="margin-top: 12px; margin-bottom: 12px;">
+      <div class="denom-title" style="font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 12px;">Cash Count (optional)</div>
+      <div class="table-card" style="margin-bottom: 16px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius-md);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--line); background: rgba(0,0,0,0.15);">
+              <th style="text-align: left; padding: 8px 12px; font-weight: 600; color: var(--text-dim);">Denomination</th>
+              <th style="text-align: right; padding: 8px 12px; font-weight: 600; color: var(--text-dim);">Quantity</th>
+              <th style="text-align: right; padding: 8px 12px; font-weight: 600; color: var(--text-dim);">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background: rgba(0,0,0,0.08);"><td colspan="3" style="padding: 6px 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em;">Notes</td></tr>
+            ${NOTES.map(n => row("RM " + n, "N" + n)).join("")}
+            <tr style="background: rgba(0,0,0,0.08);"><td colspan="3" style="padding: 6px 12px; font-weight: 600; font-size: 11px; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em;">Coins</td></tr>
+            ${COINS.map(c => row((c * 100) + "c", "C" + c)).join("")}
+          </tbody>
+        </table>
       </div>
-      <div class="denom-total">
-        <span>Notes: <b id="${prefix}-notesTotal">RM 0.00</b></span>
-        <span>Coins: <b id="${prefix}-coinsTotal">RM 0.00</b></span>
-        <span>Total: <b id="${prefix}-grandTotal">RM 0.00</b></span>
+      <div class="denom-total" style="display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; border-top: 1px dashed var(--line); padding-top: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; color: var(--text-dim);">
+          <span>Subtotal of Cash (Notes):</span>
+          <b id="${prefix}-notesTotal" style="font-family: 'IBM Plex Mono', monospace; color: var(--text);">RM 0.00</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; color: var(--text-dim);">
+          <span>Subtotal of Coins:</span>
+          <b id="${prefix}-coinsTotal" style="font-family: 'IBM Plex Mono', monospace; color: var(--text);">RM 0.00</b>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 14.5px; font-weight: 700; border-top: 1px solid var(--line); padding-top: 8px;">
+          <span style="color: var(--text);">Final Total of Cash and Coin:</span>
+          <b id="${prefix}-grandTotal" style="font-family: 'IBM Plex Mono', monospace; color: var(--emerald-400);">RM 0.00</b>
+        </div>
       </div>
     </div>`;
 }
@@ -384,12 +412,18 @@ window.updateDenomTotal = function (prefix) {
   NOTES.forEach(n => {
     const el = document.querySelector(`[data-denom="${prefix}"][data-key="N${n}"]`);
     const qty = Number(el?.value || 0);
-    if (qty > 0) { notesTotal += qty * n; tokens.push(`RM${n}×${qty}`); }
+    const rowTotal = qty * n;
+    const rowEl = document.getElementById(`${prefix}-N${n}-rowTotal`);
+    if (rowEl) rowEl.textContent = fmtRM(rowTotal);
+    if (qty > 0) { notesTotal += rowTotal; tokens.push(`RM${n}×${qty}`); }
   });
   COINS.forEach(c => {
     const el = document.querySelector(`[data-denom="${prefix}"][data-key="C${c}"]`);
     const qty = Number(el?.value || 0);
-    if (qty > 0) { coinsTotal += qty * c; tokens.push(`RM${c}×${qty}`); }
+    const rowTotal = qty * c;
+    const rowEl = document.getElementById(`${prefix}-C${c}-rowTotal`);
+    if (rowEl) rowEl.textContent = fmtRM(rowTotal);
+    if (qty > 0) { coinsTotal += rowTotal; tokens.push(`RM${c}×${qty}`); }
   });
   const grand = notesTotal + coinsTotal;
   $(`#${prefix}-notesTotal`).textContent = fmtRM(notesTotal);
@@ -614,7 +648,14 @@ async function renderOfferings(root) {
       <label>Amount (RM)<input type="number" step="0.01" name="amount" data-linked="off" required /></label>
       <label>Counted By${comboSelectHTML("counted_by", counters, "— select —")}</label>
       <label>Attendance<input type="number" name="attendance" /></label>
-      <label>Pastor${comboSelectHTML("pastor_name", pastors, "— none —")}</label>
+      <label>Pastor Name${comboSelectHTML("pastor_name", pastors, "— none —")}</label>
+      <label>Pastor Type
+        <select name="pastor_type">
+          <option value="">— select type —</option>
+          <option value="Local">Local</option>
+          <option value="Foreigner">Foreigner</option>
+        </select>
+      </label>
       <label>Pastor Payment (RM)<input type="number" step="0.01" name="pastor_payment" /></label>
       ${denomCalcHTML("off")}
       <div class="full-row"><button class="btn-secondary" type="submit">Save Offering</button></div>
@@ -624,8 +665,8 @@ async function renderOfferings(root) {
       <button class="btn-ghost" onclick="goToView('offerings-records')">View all records →</button>
     </div>
     <div class="table-card"><table>
-      <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Counted By</th><th>Pastor</th><th>Attendance</th>${canWrite() ? "<th></th>" : ""}</tr></thead>
-      <tbody id="offeringsBody"><tr><td colspan="7" class="loading-text">Loading…</td></tr></tbody>
+      <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Counted By</th><th>Pastor Name</th><th>Pastor Type</th><th>Attendance</th>${canWrite() ? "<th></th>" : ""}</tr></thead>
+      <tbody id="offeringsBody"><tr><td colspan="8" class="loading-text">Loading…</td></tr></tbody>
     </table></div>`;
 
   if (canWrite()) { attachOfferingForm(root, cfg); initComboSelects($("#offeringForm")); }
@@ -633,17 +674,17 @@ async function renderOfferings(root) {
   const { data: rows, error } = await sb.from("offerings").select("*")
     .eq("is_latest", true).order("date", { ascending: false }).limit(5);
   const body = $("#offeringsBody");
-  if (error) { body.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`; return; }
+  if (error) { body.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`; return; }
   body.innerHTML = rows.length ? rows.map(r => `
     <tr>
       <td>${r.date}</td><td>${r.offering_type}</td>
       <td class="amount">${fmtRM(r.amount)}</td><td>${r.counted_by || "—"}</td>
-      <td>${r.pastor_name || "—"}</td><td>${r.attendance ?? "—"}</td>
+      <td>${r.pastor_name || "—"}</td><td>${r.pastor_type || "—"}</td><td>${r.attendance ?? "—"}</td>
       ${canWrite() ? `<td class="action-row">
         <button class="btn-ghost" onclick='editOffering(${JSON.stringify(r).replace(/'/g, "&apos;")})'>Edit</button>
         ${isAdmin() ? `<button class="btn-danger" onclick="deleteRow('offerings','${r.group_id}')">Delete</button>` : ""}
       </td>` : ""}
-    </tr>`).join("") : `<tr><td colspan="7">No offerings yet.</td></tr>`;
+    </tr>`).join("") : `<tr><td colspan="8">No offerings yet.</td></tr>`;
 }
 
 // Full offerings list — separate page, own search box, no form.
@@ -653,29 +694,29 @@ async function renderOfferingsRecords(root) {
       <button class="btn-ghost" onclick="goToView('offerings')">← Back to Offerings</button>
     </div>
     <div class="form-card" style="margin-bottom:16px">
-      <label class="full-row">Search (type, counted by, pastor)<input type="text" id="offRecSearch" placeholder="Search…" /></label>
+      <label class="full-row">Search (type, counted by, pastor, type)<input type="text" id="offRecSearch" placeholder="Search…" /></label>
     </div>
     <div class="table-card"><table>
-      <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Counted By</th><th>Pastor</th><th>Attendance</th>${canWrite() ? "<th></th>" : ""}</tr></thead>
-      <tbody id="offRecBody"><tr><td colspan="7" class="loading-text">Loading…</td></tr></tbody>
+      <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Counted By</th><th>Pastor Name</th><th>Pastor Type</th><th>Attendance</th>${canWrite() ? "<th></th>" : ""}</tr></thead>
+      <tbody id="offRecBody"><tr><td colspan="8" class="loading-text">Loading…</td></tr></tbody>
     </table></div>`;
 
   const { data: rows, error } = await sb.from("offerings").select("*")
     .eq("is_latest", true).order("date", { ascending: false }).limit(1000);
   const body = $("#offRecBody");
-  if (error) { body.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`; return; }
+  if (error) { body.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`; return; }
 
   const draw = (list) => {
     body.innerHTML = list.length ? list.map(r => `
       <tr>
         <td>${r.date}</td><td>${r.offering_type}</td>
         <td class="amount">${fmtRM(r.amount)}</td><td>${r.counted_by || "—"}</td>
-        <td>${r.pastor_name || "—"}</td><td>${r.attendance ?? "—"}</td>
+        <td>${r.pastor_name || "—"}</td><td>${r.pastor_type || "—"}</td><td>${r.attendance ?? "—"}</td>
         ${canWrite() ? `<td class="action-row">
           <button class="btn-ghost" onclick='editOffering(${JSON.stringify(r).replace(/'/g, "&apos;")}); goToView("offerings")'>Edit</button>
           ${isAdmin() ? `<button class="btn-danger" onclick="deleteRow('offerings','${r.group_id}')">Delete</button>` : ""}
         </td>` : ""}
-      </tr>`).join("") : `<tr><td colspan="7">No matching offerings.</td></tr>`;
+      </tr>`).join("") : `<tr><td colspan="8">No matching offerings.</td></tr>`;
   };
   draw(rows);
   $("#offRecSearch").addEventListener("input", (e) => {
@@ -683,7 +724,8 @@ async function renderOfferingsRecords(root) {
     draw(!q ? rows : rows.filter(r =>
       (r.offering_type || "").toLowerCase().includes(q) ||
       (r.counted_by || "").toLowerCase().includes(q) ||
-      (r.pastor_name || "").toLowerCase().includes(q)));
+      (r.pastor_name || "").toLowerCase().includes(q) ||
+      (r.pastor_type || "").toLowerCase().includes(q)));
   });
 }
 
@@ -699,6 +741,7 @@ function attachOfferingForm(root) {
       amount: Number(f.get("amount")), counted_by: f.get("counted_by") || null,
       attendance: f.get("attendance") ? Number(f.get("attendance")) : null,
       pastor_name: f.get("pastor_name") || null,
+      pastor_type: f.get("pastor_type") || null,
       pastor_payment: f.get("pastor_payment") ? Number(f.get("pastor_payment")) : null,
       denominations: denom.denomStr || null,
       notes_total: denom.notesTotal || null,
@@ -731,6 +774,7 @@ window.editOffering = function (r) {
   setComboValue(form, "counted_by", r.counted_by || "");
   form.querySelector('[name="attendance"]').value = r.attendance || "";
   setComboValue(form, "pastor_name", r.pastor_name || "");
+  form.querySelector('[name="pastor_type"]').value = r.pastor_type || "";
   form.querySelector('[name="pastor_payment"]').value = r.pastor_payment || "";
   fillDenomInputs("off", r.denominations);
   setEditTarget(form, r.group_id);
