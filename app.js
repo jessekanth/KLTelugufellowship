@@ -2193,7 +2193,7 @@ function renderBulletin(root) {
         </div>
         <div style="border-top:1px solid var(--line);padding-top:8px;">
           <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Contact 2 — Name
-            <input type="text" id="bulC2Name" value="Bro. Jesse Kanth / బ్రదర్ జెస్సే కాంత్" style="margin-top:3px;display:block;width:100%;">
+            <input type="text" id="bulC2Name" value="Bro. Jesse Kanth / బ్రదర్ జెస్సీ కాంత్" style="margin-top:3px;display:block;width:100%;">
           </label>
           <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:4px;display:block;">Phone
             <input type="text" id="bulC2Phone" value="+6011-35783152" style="margin-top:3px;display:block;width:100%;">
