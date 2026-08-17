@@ -2012,24 +2012,24 @@ function updateBulletinPreview() {
   </div>
 
   <!-- COL 3: Branding -->
-  <div style="padding:8px 10px;border:2px solid #c8860a;display:flex;flex-direction:column;align-items:center;gap:4px;">
+  <div style="padding:8px 10px;border:2px solid #c8860a;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;">
     <!-- Scripture banner -->
-    <div style="width:100%;background:#fff9f0;border:1px solid #f0d8a8;border-radius:4px;padding:4px 8px;">
-      <div style="font-size:15px;text-align:center;color:#444;line-height:1.3;font-family:'Noto Serif Telugu',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bannerTl}</div>
+    <div style="width:100%;background:#fff9f0;border:1px solid #f0d8a8;border-radius:4px;padding:4px 8px;flex-shrink:0;">
+      <div style="font-size:12.5px;text-align:center;color:#444;line-height:1.3;font-family:'Noto Serif Telugu',serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${bannerTl}</div>
       <div style="font-size:10px;font-weight:700;color:#c8860a;text-align:right;font-family:'Noto Serif Telugu',serif;margin-top:1px;">${bannerRef}</div>
     </div>
 
     <!-- Logo -->
-    <img src="kltf-logo.png" alt="KLTF Logo" crossorigin="anonymous" style="width:96px;height:96px;border-radius:50%;object-fit:contain;background:#fff;border:2px solid #c8860a;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;box-shadow:0 2px 6px rgba(200,134,10,0.18);">
+    <img src="kltf-logo.png" alt="KLTF Logo" crossorigin="anonymous" style="width:76px;height:76px;flex-shrink:0;border-radius:50%;object-fit:contain;background:#fff;border:2px solid #c8860a;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;box-shadow:0 2px 6px rgba(200,134,10,0.18);">
 
     <!-- Title + Church name -->
-    <div style="text-align:center;">
-      <div style="color:#c8860a;font-size:15px;font-weight:700;font-family:'Noto Serif Telugu',serif;line-height:1.4;">ఆదివారం ఆరాధన &nbsp; తెలుగు సహవాసము</div>
-      <div style="color:#c8860a;font-size:15px;font-weight:600;letter-spacing:0.02em;line-height:1.4;">Sunday Worship &nbsp; Telugu Fellowship</div>
+    <div style="text-align:center;flex-shrink:0;">
+      <div style="color:#c8860a;font-size:13.5px;font-weight:700;font-family:'Noto Serif Telugu',serif;line-height:1.3;">ఆదివారం ఆరాధన &nbsp; తెలుగు సహవాసము</div>
+      <div style="color:#c8860a;font-size:13.5px;font-weight:600;letter-spacing:0.02em;line-height:1.3;">Sunday Worship &nbsp; Telugu Fellowship</div>
     </div>
 
     <!-- Church photo -->
-    <div style="width:100%;height:72px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
+    <div style="width:100%;height:58px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
       ${churchPhoto
         ? `<img src="${churchPhoto}" alt="Church" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:10px;background:#eee;">Church photo</span>`
         : `<span style="color:#aaa;font-size:10px;">Add church photo URL</span>`}
@@ -2038,31 +2038,31 @@ function updateBulletinPreview() {
     </div>
 
     <!-- Date/time block -->
-    <div style="width:100%;background:#d4edda;border:1px solid #86c99a;padding:5px 8px;text-align:center;border-radius:3px;">
+    <div style="width:100%;background:#d4edda;border:1px solid #86c99a;padding:5px 8px;text-align:center;border-radius:3px;flex-shrink:0;">
       <div style="font-weight:700;font-family:'Noto Serif Telugu',serif;font-size:12px;color:#1a5c2e;">${tlDate}</div>
       <div style="font-family:'Noto Serif Telugu',serif;font-size:10.5px;color:#256b38;">${tlTime}</div>
       <div style="font-weight:600;font-size:10.5px;color:#1a5c2e;">${enDate} ${time}.</div>
     </div>
 
     <!-- Venue -->
-    <div style="width:100%;text-align:center;line-height:1.5;color:#222;">
+    <div style="width:100%;text-align:center;line-height:1.4;color:#222;flex-shrink:0;">
       <div style="font-family:'Noto Serif Telugu',serif;font-weight:700;font-size:11px;">${venueTl}</div>
       <div style="font-weight:700;font-size:11px;">${venueEn}</div>
       <div style="color:#555;font-size:10px;">${venueAddr}</div>
     </div>
 
     <!-- Contact box (footer) -->
-    <div style="width:100%;border:2px solid #c8860a;border-radius:8px;overflow:hidden;background:#fff9f0;margin-top:2px;">
+    <div style="width:100%;border:2px solid #c8860a;border-radius:8px;overflow:hidden;background:#fff9f0;margin-top:1px;flex-shrink:0;">
       <!-- Header bar -->
-      <div style="background:#c8860a;padding:4px 10px;">
-        <span style="font-size:13px;">📞</span>
-        <span style="font-weight:700;font-size:10.5px;color:#fff;text-decoration:underline;"> Contact / <span style="font-family:'Noto Serif Telugu',serif;">వివరాలకు:</span></span>
+      <div style="background:#c8860a;padding:3px 10px;">
+        <span style="font-size:12px;">📞</span>
+        <span style="font-weight:700;font-size:10px;color:#fff;text-decoration:underline;"> Contact / <span style="font-family:'Noto Serif Telugu',serif;">వివరాలకు:</span></span>
       </div>
       <!-- Contact rows -->
-      <div style="padding:5px 10px;display:flex;flex-direction:column;gap:3px;">
-        ${contact1n ? `<div style="font-size:10px;color:#111;padding-bottom:3px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact1n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact1p}</span></div>` : ""}
-        ${contact2n ? `<div style="font-size:10px;color:#111;padding-bottom:3px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact2n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact2p}</span></div>` : ""}
-        ${contact3n ? `<div style="font-size:10px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact3n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact3p}</span></div>` : ""}
+      <div style="padding:4px 10px;display:flex;flex-direction:column;gap:2px;">
+        ${contact1n ? `<div style="font-size:9.5px;color:#111;padding-bottom:2px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact1n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact1p}</span></div>` : ""}
+        ${contact2n ? `<div style="font-size:9.5px;color:#111;padding-bottom:2px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact2n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact2p}</span></div>` : ""}
+        ${contact3n ? `<div style="font-size:9.5px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact3n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact3p}</span></div>` : ""}
       </div>
     </div>
   </div>
@@ -2248,13 +2248,17 @@ function waitForBulletinImages() {
   const el = document.getElementById("bulletinPreview");
   if (!el) return Promise.resolve();
   const imgs = Array.from(el.querySelectorAll("img"));
-  return Promise.all(imgs.map(img => new Promise(resolve => {
+  const imgsReady = Promise.all(imgs.map(img => new Promise(resolve => {
     const fresh = new Image();
     fresh.crossOrigin = "anonymous";
     fresh.onload = () => { img.src = fresh.src; resolve(); };
     fresh.onerror = () => resolve(); // skip images that fail CORS — don't block export
     fresh.src = img.src + (img.src.includes("?") ? "&" : "?") + "_cors=" + Date.now();
   })));
+  // Also wait for web fonts (Fraunces / Noto Serif Telugu / etc.) to finish loading —
+  // otherwise html2canvas can snapshot mid-swap and text shifts, throwing off alignment.
+  const fontsReady = (document.fonts && document.fonts.ready) ? document.fonts.ready : Promise.resolve();
+  return Promise.all([imgsReady, fontsReady]);
 }
 
 // ── Bulletin: Save as Image ──────────────────────────────────────────────────
