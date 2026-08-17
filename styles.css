@@ -1,65 +1,51 @@
 :root {
-  /* Premium Dark Mode Professional Palette */
-  --ink: #090d16;          /* Dark space */
-  --paper: #090d16;        /* Deep background slate */
-  --card: #131c2e;         /* Slate 850 surface */
-  --line: #1e293b;         /* Slate 800 border */
-  --text: #f8fafc;         /* Slate 50 clean text */
-  --text-dim: #94a3b8;     /* Slate 400 sub text */
-  --accent: #10b981;       /* Emerald 500 */
-  --accent-dark: #34d399;  /* Emerald 400 */
-  --accent-soft: rgba(16, 185, 129, 0.08);
-  --danger: #f87171;       /* Red 400 */
-  --danger-soft: rgba(239, 68, 68, 0.1);
+  /* Ledger & Marigold — deep plum ledger ink, brass, marigold, temple teal */
+  --ink: #150F1E;             /* near-black plum, deepest ink */
+  --paper: #1B1526;           /* page background, plum-ink */
+  --card: #241C33;            /* raised ledger-card surface */
+  --line: #3B2E4E;            /* muted plum-brass rule line */
+  --text: #F3ECE0;            /* warm ivory (aged paper) text */
+  --text-dim: #A99BC0;        /* muted lavender-grey sub text */
+  --accent: #C9A227;          /* brass / offering-plate gold — primary */
+  --accent-dark: #E6C158;     /* brighter brass for dark surfaces */
+  --accent-soft: rgba(201, 162, 39, 0.12);
+  --danger: #C1443C;          /* deep maroon */
+  --danger-soft: rgba(193, 68, 60, 0.12);
 
-  --surface-alt: #090d16;  /* Slate 950 */
+  --marigold: #FF8A3D;        /* fellowship warmth accent */
+  --marigold-soft: rgba(255, 138, 61, 0.14);
+  --teal: #2FA593;            /* temple-teal secondary accent */
+  --teal-soft: rgba(47, 165, 147, 0.14);
 
-  --chip-bg: rgba(16, 185, 129, 0.1);
-  --chip-border: rgba(16, 185, 129, 0.2);
-  --chip-text: #34d399;
-  --banner-bg: #2a2210;
-  --banner-border: #4d3d12;
-  --banner-text: #e8c777;
+  --surface-alt: #150F1E;
 
-  --radius: 16px;
-  --radius-lg: 20px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --chip-bg: rgba(201, 162, 39, 0.12);
+  --chip-border: rgba(201, 162, 39, 0.28);
+  --chip-text: #E6C158;
+  --banner-bg: #3A2A12;
+  --banner-border: #5C4419;
+  --banner-text: #F0C878;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.5);
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  --radius: 14px;
+  --radius-lg: 18px;
+  --radius-md: 10px;
+  --radius-sm: 7px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 10px 26px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
 
   --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
   --dur-fast: 120ms;
   --dur-base: 200ms;
   --dur-slow: 320ms;
 
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-body);
   font-optical-sizing: auto;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #090d16;
-    --paper: #090d16;
-    --card: #131c2e;
-    --line: #1e293b;
-    --text: #f8fafc;
-    --text-dim: #94a3b8;
-    --surface-alt: #090d16;
-    --chip-bg: rgba(16, 185, 129, 0.1);
-    --chip-border: rgba(16, 185, 129, 0.2);
-    --chip-text: #34d399;
-    --banner-bg: #2a2210;
-    --banner-border: #4d3d12;
-    --banner-text: #e8c777;
-    --accent-soft: rgba(16, 185, 129, 0.08);
-    --danger-soft: rgba(239, 68, 68, 0.1);
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 18px 44px rgba(0, 0, 0, 0.5);
-  }
 }
 
 * { box-sizing: border-box; }
@@ -69,11 +55,37 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--text);
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 .hidden { display: none !important; }
+
+/* Signature: a thin garland-gradient line (marigold -> brass -> teal)
+   along the top edge of every raised card — the fellowship's warmth
+   running through the ledger's structure. */
+.stat-card, .table-card, .form-card, .chart-card, .login-card, .modal-card {
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before, .table-card::before, .form-card::before,
+.chart-card::before, .login-card::before, .modal-card::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--marigold), var(--accent) 55%, var(--teal));
+  opacity: 0.9;
+}
+
+/* Ledger numerals: every amount rendered in monospace with a brass
+   hairline underline, like an entry ruled into the cash book. */
+td.amount, .stat-value, .denom-total b, .denom-total strong {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+td.amount {
+  border-bottom: 1px solid var(--line);
+  box-shadow: inset 0 -1px 0 var(--accent-soft);
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -87,8 +99,8 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--paper);
-  background-image: radial-gradient(circle at 15% 10%, var(--accent-soft) 0%, transparent 45%),
-                     radial-gradient(circle at 90% 90%, var(--accent-soft) 0%, transparent 40%);
+  background-image: radial-gradient(circle at 15% 10%, var(--marigold-soft) 0%, transparent 45%),
+                     radial-gradient(circle at 90% 90%, var(--teal-soft) 0%, transparent 40%);
   padding: 20px;
 }
 .login-card {
@@ -120,14 +132,15 @@ body {
 /* ---------- Brand lockup ---------- */
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-mark {
-  width: 38px; height: 38px; border-radius: var(--radius-sm);
-  background: linear-gradient(150deg, var(--accent), var(--accent-dark));
-  color: #fff;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: linear-gradient(150deg, var(--marigold), var(--accent) 60%, var(--teal));
+  color: var(--ink);
   display: flex; align-items: center; justify-content: center;
   font-weight: 700; font-size: 13px;
-  box-shadow: 0 4px 12px rgba(23, 178, 106, 0.35);
+  font-family: var(--font-display);
+  box-shadow: 0 4px 12px rgba(201, 162, 39, 0.4);
 }
-.brand-name { color: var(--text); font-weight: 700; font-size: 14.5px; letter-spacing: -0.01em; }
+.brand-name { color: var(--text); font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -0.005em; }
 .brand-sub { color: var(--text-dim); font-size: 12px; }
 .sidebar .brand-name { color: var(--text); }
 .sidebar .brand-sub { color: var(--text-dim); }
@@ -175,7 +188,7 @@ body {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
-.content-header h1 { margin: 0 0 4px; font-size: clamp(20px, 2.2vw, 26px); font-weight: 700; letter-spacing: -0.015em; }
+.content-header h1 { margin: 0 0 4px; font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 29px); font-weight: 700; letter-spacing: -0.01em; }
 .view-subtitle { color: var(--text-dim); font-size: 13px; }
 
 /* ---------- Buttons ---------- */
@@ -257,17 +270,14 @@ body {
   margin-bottom: 14px;
 }
 .stat-icon svg { width: 19px; height: 19px; }
-.stat-icon.green  { background: var(--accent-soft); color: var(--accent-dark); }
+.stat-icon.green  { background: var(--teal-soft); color: var(--teal); }
 .stat-icon.red    { background: var(--danger-soft); color: var(--danger); }
-.stat-icon.blue   { background: #e8f0fe; color: #3266d6; }
-.stat-icon.amber  { background: #fff6e6; color: #b3760b; }
+.stat-icon.blue   { background: var(--marigold-soft); color: var(--marigold); }
+.stat-icon.amber  { background: var(--accent-soft); color: var(--accent-dark); }
 .stat-icon.neutral{ background: var(--surface-alt); color: var(--text-dim); }
-/* App always runs in dark mode (class="dark" on <html>); use dark palette unconditionally */
-.stat-icon.blue   { background: #16233f; color: #7fa2ff; }
-.stat-icon.amber  { background: #2a2210; color: #e8c777; }
 .stat-label { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 500; }
 .stat-value { font-size: clamp(20px, 2vw, 25px); font-weight: 700; letter-spacing: -0.01em; color: var(--text); }
-.stat-value.positive { color: var(--accent-dark); }
+.stat-value.positive { color: var(--teal); }
 .stat-value.negative { color: var(--danger); }
 
 /* ---------- Table ---------- */
@@ -334,7 +344,7 @@ td.amount { font-weight: 600; }
 }
 
 .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.section-head h2 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+.section-head h2 { font-family: var(--font-display); font-size: 18px; font-weight: 650; letter-spacing: -0.005em; margin: 0; }
 
 .toast {
   position: fixed; bottom: 22px; right: 22px;
@@ -544,25 +554,25 @@ td.amount { font-weight: 600; }
 }
 
 .admin-tag {
-  background: rgba(239, 68, 68, 0.1) !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
-  color: #f87171 !important;
+  background: var(--danger-soft) !important;
+  border-color: rgba(193, 68, 60, 0.35) !important;
+  color: #E08A83 !important;
   border-radius: var(--radius-sm) !important;
   padding: 3px 8px !important;
 }
 
 .treasurer-tag {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-color: rgba(59, 130, 246, 0.3) !important;
-  color: #60a5fa !important;
+  background: var(--teal-soft) !important;
+  border-color: rgba(47, 165, 147, 0.35) !important;
+  color: var(--teal) !important;
   border-radius: var(--radius-sm) !important;
   padding: 3px 8px !important;
 }
 
 .tag-viewer {
-  background: rgba(156, 163, 175, 0.1) !important;
-  border-color: rgba(156, 163, 175, 0.3) !important;
-  color: #d1d5db !important;
+  background: rgba(169, 155, 192, 0.12) !important;
+  border-color: rgba(169, 155, 192, 0.3) !important;
+  color: var(--text-dim) !important;
   border-radius: var(--radius-sm) !important;
   padding: 3px 8px !important;
 }
@@ -614,4 +624,48 @@ td.amount { font-weight: 600; }
   font-size: 14px;
   font-weight: 600;
   min-height: 40px;
+}
+
+/* hide print button & preview label when printing */
+.bul-print-btn, .bul-preview-label { }
+
+/* Bulletin page: use full content width, no extra top padding */
+#viewRoot:has(#bulletinForm) { padding-top: 0; }
+
+/* ===== PRINT — Bulletin only ===== */
+@page { size: A4 landscape; margin: 0; }
+@media print {
+  /* hide everything */
+  #loginScreen, #toast,
+  #editModal, #profileModal, #addUserModal, #adminResetPassModal,
+  .sidebar, .content-header, #bulletinForm,
+  #viewTitle, #viewSubtitle,
+  .bul-print-btn, .bul-preview-label { display: none !important; }
+
+  /* show only the preview, full page */
+  body, html { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+  .app-shell { display: block !important; }
+  .content { padding: 0 !important; margin: 0 !important; max-width: none !important; }
+  #viewRoot { padding: 0 !important; margin: 0 !important; }
+  #viewRoot > div { display: block !important; }
+  #bulletinPreview {
+    display: block !important;
+    position: fixed !important;
+    top: 0 !important; left: 0 !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    aspect-ratio: unset !important;
+    overflow: hidden !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  #bulletinPreview > div {
+    width: 100% !important;
+    height: 100% !important;
+  }
 }

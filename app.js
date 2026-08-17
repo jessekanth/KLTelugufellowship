@@ -143,9 +143,11 @@ $("#loginForm").addEventListener("submit", async (e) => {
   const { error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { $("#loginError").textContent = error.message; return; }
   await bootAfterLogin();
+  writeAudit("Login", { email });
 });
 
 $("#logoutBtn").addEventListener("click", async () => {
+  writeAudit("Logout", { email: profile?.email });
   await sb.auth.signOut();
   location.reload();
 });
@@ -168,7 +170,7 @@ async function bootAfterLogin() {
   }
   if (profile.role === "viewer") {
     $$(".nav-item").forEach(n => {
-      if (!["summary", "statement"].includes(n.dataset.view)) n.classList.add("hidden");
+      if (!["summary", "statement", "bulletin"].includes(n.dataset.view)) n.classList.add("hidden");
     });
   }
   renderView("summary");
@@ -310,7 +312,8 @@ const VIEW_TITLES = {
   compare: ["Compare Years", "Side-by-side financial comparison"],
   audit: ["Audit Log", "Last 100 actions"],
   settings: ["Settings", "Fund configuration & dropdown lists"],
-  users: ["User Management", "Add, delete or update user accounts and reset passwords"]
+  users: ["User Management", "Add, delete or update user accounts and reset passwords"],
+  bulletin: ["Sunday Bulletin", "Generate & print the weekly worship bulletin"]
 };
 
 // Navigate to a view that isn't in the sidebar (e.g. a "View all records" page)
@@ -344,6 +347,7 @@ async function renderView(view) {
     else if (view === "audit") await renderAudit(root);
     else if (view === "settings") await renderSettings(root);
     else if (view === "users") await renderUsers(root);
+    else if (view === "bulletin") renderBulletin(root);
   } catch (err) {
     root.innerHTML = `<p style="color:var(--danger)">Error: ${err.message}</p>`;
   }
@@ -546,8 +550,8 @@ async function renderSummary(root) {
     data: {
       labels: months,
       datasets: [
-        { label: "Offerings", data: offByMonth, backgroundColor: "#22d3aa" },
-        { label: "Expenses", data: expByMonth, backgroundColor: "#d1483f" }
+        { label: "Offerings", data: offByMonth, backgroundColor: "#2FA593" },
+        { label: "Expenses", data: expByMonth, backgroundColor: "#C1443C" }
       ]
     },
     options: { responsive: true, plugins: { legend: { position: "bottom" } } }
@@ -562,7 +566,7 @@ async function renderSummary(root) {
     type: "doughnut",
     data: {
       labels: catLabels.length ? catLabels : ["No data"],
-      datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: ["#22d3aa","#4d9fff","#ffb830","#b06cff","#d1483f","#159873","#8b93a1"] }]
+      datasets: [{ data: catValues.length ? catValues : [1], backgroundColor: ["#FF8A3D","#C9A227","#2FA593","#8B6BB0","#C1443C","#E6C158","#A99BC0"] }]
     },
     options: { responsive: true, plugins: { legend: { position: "bottom" } } }
   });
@@ -576,8 +580,8 @@ async function renderSummary(root) {
     data: {
       labels: months,
       datasets: [
-        { label: "PPF Collections", data: ppfColByMonth, backgroundColor: "#17b26a", borderRadius: 6 },
-        { label: "PPF Claims", data: ppfClaimByMonth, backgroundColor: "#e0453c", borderRadius: 6 }
+        { label: "PPF Collections", data: ppfColByMonth, backgroundColor: "#C9A227", borderRadius: 6 },
+        { label: "PPF Claims", data: ppfClaimByMonth, backgroundColor: "#C1443C", borderRadius: 6 }
       ]
     },
     options: { responsive: true, plugins: { legend: { position: "bottom" } } }
@@ -591,12 +595,32 @@ async function renderSummary(root) {
   });
 }
 
-function exportSummaryPDF({ year, sum, ppfBal, catTotals }) {
+function getLogoDataUrl() {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(null);
+    img.src = "kltf-logo.png";
+  });
+}
+
+async function exportSummaryPDF({ year, sum, ppfBal, catTotals }) {
+  const logoData = await getLogoDataUrl();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   doc.setFillColor(13, 17, 23); doc.rect(0, 0, 210, 24, "F");
+  if (logoData) doc.addImage(logoData, "PNG", 183, 2, 14, 14);
   doc.setTextColor(34, 211, 170); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-  doc.text("KLTF Finance Summary", 14, 12);
+  doc.text("KLTF Finance & Administration Summary", 14, 12);
   doc.setTextColor(150, 160, 170); doc.setFontSize(9); doc.setFont("helvetica", "normal");
   doc.text(`Financial Year ${year} · Generated ${new Date().toLocaleDateString("en-MY")}`, 14, 19);
 
@@ -1622,12 +1646,15 @@ async function loadMonthlyStatement(year, asOfDate) {
     </div>`;
 }
 
-function exportMonthlyStatementPDF(st) {
+async function exportMonthlyStatementPDF(st) {
+  const logoData = await getLogoDataUrl();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
-  doc.setFontSize(14); doc.setFont("helvetica", "bold");
+  doc.setFillColor(13, 17, 23); doc.rect(0, 0, 297, 24, "F");
+  if (logoData) doc.addImage(logoData, "PNG", 270, 2, 14, 14);
+  doc.setTextColor(34, 211, 170); doc.setFontSize(14); doc.setFont("helvetica", "bold");
   doc.text("KLTF Statement of Comprehensive Income", 14, 14);
-  doc.setFontSize(10); doc.setFont("helvetica", "normal");
+  doc.setTextColor(150, 160, 170); doc.setFontSize(10); doc.setFont("helvetica", "normal");
   doc.text(`Year ${st.year}`, 14, 20);
 
   const colCount = st.colHeader.length;
@@ -1704,12 +1731,14 @@ async function loadStatement(from, to) {
     </table></div>`;
 }
 
-function exportStatementPDF({ from, to, rows, totalIn, totalOut }) {
+async function exportStatementPDF({ from, to, rows, totalIn, totalOut }) {
+  const logoData = await getLogoDataUrl();
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   doc.setFillColor(13, 17, 23); doc.rect(0, 0, 210, 24, "F");
+  if (logoData) doc.addImage(logoData, "PNG", 183, 2, 14, 14);
   doc.setTextColor(34, 211, 170); doc.setFontSize(16); doc.setFont("helvetica", "bold");
-  doc.text("KLTF Finance Statement", 14, 12);
+  doc.text("KLTF Finance & Administration Statement", 14, 12);
   doc.setTextColor(150, 160, 170); doc.setFontSize(9); doc.setFont("helvetica", "normal");
   doc.text(`${from} to ${to} · Generated ${new Date().toLocaleDateString("en-MY")}`, 14, 19);
 
@@ -1777,4 +1806,500 @@ async function loadCompare(yearA, yearB) {
         `).join("")}
       </tbody>
     </table></div>`;
+}
+
+// ================= SUNDAY BULLETIN GENERATOR =================
+
+const TL_MONTHS = ["జనవరి","ఫిబ్రవరి","మార్చి","ఏప్రిల్","మే","జూన్",
+                   "జులై","ఆగస్టు","సెప్టెంబర్","అక్టోబర్","నవంబర్","డిసెంబర్"];
+const TL_NUMS = ["౦","౧","౨","౩","౪","౫","౬","౭","౮","౯"];
+
+function toTeluguNum(n) {
+  return String(n).split("").map(d => TL_NUMS[+d]).join("");
+}
+
+function toTeluguDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDate();
+  const month = TL_MONTHS[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+function toEnglishDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toLocaleDateString("en-MY", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+const BULLETIN_OOW_DEFAULTS = [
+  { en: "CALL TO WORSHIP",        tl: "ఆరాధనకు ఆహ్వానము",               personEn: "", personTl: "", syncGroup: "A" },
+  { en: "OPENING PRAYER",         tl: "ప్రారంభ ప్రార్థన",                personEn: "", personTl: "", syncGroup: "A" },
+  { en: "PRAISE AND WORSHIP",     tl: "స్తుతి మరియు ఆరాధన",             personEn: "Choir", personTl: "గాయక బృందం" },
+  { en: "PRAYER",                 tl: "ప్రార్థన",                         personEn: "", personTl: "", syncGroup: "A" },
+  { en: "LORD'S PRAYER",          tl: "ప్రభువు నేర్పిన ప్రార్థన",         personEn: "Fellowship Members", personTl: "సంఘ సభ్యులు" },
+  { en: "SCRIPTURE READING",      tl: "వాక్య పఠనం",                      personEn: "", personTl: "" },
+  { en: "WORD OF GOD",            tl: "దేవుని వాక్యం",                   personEn: "", personTl: "", syncGroup: "B" },
+  { en: "HOLY COMMUNION",         tl: "పవిత్ర భోజనం",                    personEn: "Fellowship Members", personTl: "సంఘ సభ్యులు", optional: true },
+  { en: "TESTIMONIES",            tl: "సాక్ష్యాలు",                       personEn: "Fellowship Members", personTl: "సంఘ సభ్యులు", optional: true },
+  { en: "PRAYER FOR TESTIMONIES", tl: "సాక్ష్యాల కోసం ప్రార్థన",          personEn: "", personTl: "", optional: true },
+  { en: "TITHES & OFFERING SONG", tl: "దశమ భాగాలు మరియు కానుకల పాట",     personEn: "Choir", personTl: "గాయక బృందం" },
+  { en: "ANNOUNCEMENT",           tl: "సంఘ ప్రకటనలు",                    personEn: "", personTl: "" },
+  { en: "FINAL PRAYER",           tl: "ముగింపు ప్రార్థన",                 personEn: "", personTl: "", syncGroup: "B" },
+  { en: "BENEDICTION",            tl: "ఆశీర్వాద ప్రార్థన",               personEn: "", personTl: "", syncGroup: "B" },
+  { en: "CLOSING SONG",           tl: "ముగింపు గీతం",                    personEn: "Choir", personTl: "గాయక బృందం" }
+];
+
+let _bulletinRows = [];
+
+function bulletinRowsHTML() {
+  return _bulletinRows.map((r, i) => {
+    const sg = r.syncGroup || "";
+    const syncAttr = sg ? `data-sync-group="${sg}"` : "";
+    const syncHint = sg ? ` title="Linked — all '${sg}' rows stay in sync"` : "";
+    const syncStyle = sg ? "border-color:var(--accent);" : "";
+    const enabled = r.enabled !== false;
+    const rowOpacity = enabled ? "1" : "0.45";
+    const checkboxCol = r.optional
+      ? `<input type="checkbox" class="bul-enabled" title="Include this row" ${enabled ? "checked" : ""} onchange="bulletinToggleRow(${i},this.checked)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--accent);flex-shrink:0;margin-top:2px;">`
+      : `<span style="width:15px;display:inline-block;flex-shrink:0;"></span>`;
+    const labelBlock = `
+      <div style="opacity:${rowOpacity};min-width:0;">
+        <input class="bul-en" value="${(r.en||"").replace(/"/g,"&quot;")}" placeholder="English" style="display:block;width:100%;padding:4px 7px;background:var(--surface-alt);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:12px;margin-bottom:3px;">
+        <input class="bul-tl" value="${(r.tl||"").replace(/"/g,"&quot;")}" placeholder="Telugu" style="display:block;width:100%;padding:4px 7px;background:var(--surface-alt);border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:12px;font-family:'Noto Serif Telugu',sans-serif;">
+      </div>`;
+    const personBlock = `
+      <div style="opacity:${rowOpacity};min-width:0;">
+        <input class="bul-person-en" ${syncAttr}${syncHint} value="${(r.personEn||"").replace(/"/g,"&quot;")}" placeholder="Person (EN)" style="display:block;width:100%;padding:4px 7px;background:var(--surface-alt);border:1px solid var(--line);${syncStyle}border-radius:5px;color:var(--text);font-size:12px;margin-bottom:3px;">
+        <input class="bul-person-tl" ${syncAttr}${syncHint} value="${(r.personTl||"").replace(/"/g,"&quot;")}" placeholder="Person (TL)" style="display:block;width:100%;padding:4px 7px;background:var(--surface-alt);border:1px solid var(--line);${syncStyle}border-radius:5px;color:var(--text);font-size:12px;font-family:'Noto Serif Telugu',sans-serif;">
+      </div>`;
+    return `
+    <div class="bul-row" data-row="${i}" style="display:grid;grid-template-columns:15px 1fr 1fr auto;gap:8px;align-items:start;padding:6px 0;border-bottom:1px solid var(--line);">
+      ${checkboxCol}
+      ${labelBlock}
+      ${personBlock}
+      <button onclick="bulletinRemoveRow(${i})" title="Remove row" style="background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px 6px;font-size:14px;line-height:1;margin-top:2px;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--text-dim)'">✕</button>
+    </div>`;
+  }).join("");
+}
+
+window.bulletinToggleRow = function(i, checked) {
+  _bulletinRows[i].enabled = checked;
+  const container = document.getElementById("bulRowsContainer");
+  if (container) container.innerHTML = bulletinRowsHTML();
+  updateBulletinPreview();
+};
+
+window.bulletinRemoveRow = function(i) {
+  _bulletinRows.splice(i, 1);
+  const container = document.getElementById("bulRowsContainer");
+  if (container) container.innerHTML = bulletinRowsHTML();
+  updateBulletinPreview();
+};
+
+window.bulletinAddRow = function() {
+  _bulletinRows.push({ en: "", tl: "", personEn: "", personTl: "" });
+  const container = document.getElementById("bulRowsContainer");
+  if (container) container.innerHTML = bulletinRowsHTML();
+};
+
+function readBulletinRows() {
+  const rows = [];
+  document.querySelectorAll("#bulRowsContainer .bul-row").forEach(div => {
+    const cb = div.querySelector(".bul-enabled");
+    const enabled = cb ? cb.checked : true;
+    rows.push({
+      en: div.querySelector(".bul-en").value.trim(),
+      tl: div.querySelector(".bul-tl").value.trim(),
+      personEn: div.querySelector(".bul-person-en").value.trim(),
+      personTl: div.querySelector(".bul-person-tl").value.trim(),
+      syncGroup: (div.querySelector(".bul-person-en") || {}).dataset?.syncGroup || "",
+      enabled
+    });
+  });
+  return rows;
+}
+
+function updateBulletinPreview() {
+  const f = document.getElementById("bulletinForm");
+  if (!f) return;
+
+  const v = id => (f.querySelector("#" + id) || {}).value || "";
+
+  // read dynamic OoW rows
+  const rows = readBulletinRows();
+
+  const date = v("bulDate");
+  const tlDate = toTeluguDate(date);
+  const enDate = toEnglishDate(date);
+  const time = v("bulTime") || "4:00 PM to 6:00 PM";
+  const tlTime = `${time.split(" to ")[0]} గంటల నుండి ${(time.split(" to ")[1]||"")} గంటల వరకు.`;
+
+  const eventImgUrl = v("bulEventImg");
+  const reminderText = v("bulReminder");
+  const verseEn = v("bulVerseEn");
+  const verseTl = v("bulVerseTl");
+  const verseRef = v("bulVerseRef");
+  const churchPhoto = v("bulChurchPhoto");
+
+  const contact1n = v("bulC1Name"); const contact1p = v("bulC1Phone");
+  const contact2n = v("bulC2Name"); const contact2p = v("bulC2Phone");
+  const contact3n = v("bulC3Name"); const contact3p = v("bulC3Phone");
+
+  const bannerTl = v("bulBannerTl");
+  const bannerRef = v("bulBannerRef");
+  const pastorName = v("bulPastor");
+  const venueTl = v("bulVenueTl");
+  const venueEn = v("bulVenueEn");
+  const venueAddr = v("bulVenueAddr");
+
+  const oowHTML = rows.filter(r => r.enabled !== false).map(r => {
+    const enLine = r.personEn ? `${r.en}– ${r.personEn}` : `${r.en}–`;
+    const tlLine = r.personTl ? `${r.tl}– ${r.personTl}` : (r.personEn ? `${r.tl}– ${r.personEn}` : `${r.tl}–`);
+    return `
+      <div style="margin-bottom:6px;line-height:1.45;font-size:11.5px;padding-bottom:4px;border-bottom:1px solid #f5efe4;">
+        <span style="font-weight:700;color:#111;">${enLine}</span>
+        <br>
+        <span style="color:#666;font-family:'Noto Serif Telugu',serif;font-size:12px;">${tlLine}</span>
+      </div>`;
+  }).join("");
+
+  const eventsHTML = `
+    ${eventImgUrl ? `<img src="${eventImgUrl}" alt="Event" crossorigin="anonymous" style="width:100%;max-height:130px;object-fit:contain;margin-bottom:8px;border:1px solid #ddd;">` : ""}
+    ${reminderText ? `<div style="border:2px solid #ccc;padding:10px;text-align:center;margin-bottom:8px;font-size:11px;font-weight:700;color:#333;">${reminderText.replace(/\n/g,"<br>")}</div>` : ""}`;
+
+  const preview = document.getElementById("bulletinPreview");
+  if (!preview) return;
+
+  preview.innerHTML = `
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;width:100%;height:100%;font-family:'Segoe UI',Arial,sans-serif;background:#fff;color:#111;font-size:12.5px;box-sizing:border-box;line-height:1.45;">
+
+  <!-- COL 1: Order of Worship -->
+  <div style="padding:14px 12px 10px 14px;border:2px solid #c8860a;overflow:hidden;display:flex;flex-direction:column;">
+    <div style="text-align:center;margin-bottom:10px;border-bottom:2px solid #c8860a;padding-bottom:6px;">
+      <div style="color:#c8860a;font-size:15px;font-weight:700;font-family:'Noto Serif Telugu',serif;display:block;margin-bottom:2px;">ఆదివారం ఆరాధన క్రమము</div>
+      <div style="color:#c8860a;font-size:15px;font-weight:600;letter-spacing:0.02em;">Sunday Order of Worship</div>
+    </div>
+    <div id="previewOoW" style="flex:1;">${oowHTML}</div>
+    <div style="text-align:center;margin-top:8px;color:#bbb;font-size:14px;letter-spacing:4px;">~ ~ ~ ~ ~ ~ ~</div>
+  </div>
+
+  <!-- COL 2: Events, Verse, Contacts -->
+  <div style="padding:14px 12px;border:2px solid #c8860a;display:flex;flex-direction:column;">
+    <!-- Coming Events header -->
+    <div style="display:flex;align-items:center;margin-bottom:10px;">
+      <div style="border:2px solid #c8860a;border-radius:4px 0 0 4px;padding:4px 12px;font-weight:700;font-size:15px;color:#c8860a;background:#fff9f0;white-space:nowrap;">Coming Events:-</div>
+      <div style="width:0;height:0;border-top:14px solid transparent;border-bottom:14px solid transparent;border-left:16px solid #c8860a;flex-shrink:0;margin-top:0;"></div>
+    </div>
+
+    <!-- Events area -->
+    <div style="flex:1;min-height:0;overflow:hidden;">${eventsHTML}</div>
+
+    <!-- Memory Verse -->
+    <div style="margin:8px 0 6px;text-align:center;padding:6px 4px;border-top:1px solid #eee;">
+      <div style="font-style:italic;font-weight:700;font-size:15px;color:#c8860a;margin-bottom:5px;">This Week Memory verse</div>
+      ${verseEn ? `<div style="font-style:italic;font-size:11.5px;color:#333;margin-bottom:5px;line-height:1.5;">${verseEn}</div>` : ""}
+      ${verseTl ? `<div style="font-style:italic;font-size:12px;color:#c8860a;font-family:'Noto Serif Telugu',serif;text-decoration:underline;margin-bottom:4px;line-height:1.6;">${verseTl}</div>` : ""}
+      ${verseRef ? `<div style="font-size:11px;font-weight:600;color:#555;">${verseRef}</div>` : ""}
+    </div>
+
+    <!-- Footer links -->
+    <div style="font-size:10px;color:#444;text-align:center;margin-bottom:7px;line-height:1.6;">
+      Email: kltelugufellowship@gmail.com<br>
+      <a href="http://facebook.com/KLTeluguFellowship" style="color:#1a6ab1;">http://facebook.com/KLTeluguFellowship</a>
+    </div>
+  </div>
+
+  <!-- COL 3: Branding -->
+  <div style="padding:8px 10px;border:2px solid #c8860a;display:flex;flex-direction:column;align-items:center;gap:4px;">
+    <!-- Scripture banner -->
+    <div style="width:100%;background:#fff9f0;border:1px solid #f0d8a8;border-radius:4px;padding:4px 8px;">
+      <div style="font-size:15px;text-align:center;color:#444;line-height:1.3;font-family:'Noto Serif Telugu',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${bannerTl}</div>
+      <div style="font-size:10px;font-weight:700;color:#c8860a;text-align:right;font-family:'Noto Serif Telugu',serif;margin-top:1px;">${bannerRef}</div>
+    </div>
+
+    <!-- Logo -->
+    <img src="kltf-logo.png" alt="KLTF Logo" crossorigin="anonymous" style="width:96px;height:96px;border-radius:50%;object-fit:contain;background:#fff;border:2px solid #c8860a;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;box-shadow:0 2px 6px rgba(200,134,10,0.18);">
+
+    <!-- Title + Church name -->
+    <div style="text-align:center;">
+      <div style="color:#c8860a;font-size:15px;font-weight:700;font-family:'Noto Serif Telugu',serif;line-height:1.4;">ఆదివారం ఆరాధన &nbsp; తెలుగు సహవాసము</div>
+      <div style="color:#c8860a;font-size:15px;font-weight:600;letter-spacing:0.02em;line-height:1.4;">Sunday Worship &nbsp; Telugu Fellowship</div>
+    </div>
+
+    <!-- Church photo -->
+    <div style="width:100%;height:72px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
+      ${churchPhoto
+        ? `<img src="${churchPhoto}" alt="Church" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:10px;background:#eee;">Church photo</span>`
+        : `<span style="color:#aaa;font-size:10px;">Add church photo URL</span>`}
+      <!-- Pastor bar -->
+      <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(22,101,52,0.90);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:0.02em;">Sr. Pas. Rev. ${pastorName}</div>
+    </div>
+
+    <!-- Date/time block -->
+    <div style="width:100%;background:#d4edda;border:1px solid #86c99a;padding:5px 8px;text-align:center;border-radius:3px;">
+      <div style="font-weight:700;font-family:'Noto Serif Telugu',serif;font-size:12px;color:#1a5c2e;">${tlDate}</div>
+      <div style="font-family:'Noto Serif Telugu',serif;font-size:10.5px;color:#256b38;">${tlTime}</div>
+      <div style="font-weight:600;font-size:10.5px;color:#1a5c2e;">${enDate} ${time}.</div>
+    </div>
+
+    <!-- Venue -->
+    <div style="width:100%;text-align:center;line-height:1.5;color:#222;">
+      <div style="font-family:'Noto Serif Telugu',serif;font-weight:700;font-size:11px;">${venueTl}</div>
+      <div style="font-weight:700;font-size:11px;">${venueEn}</div>
+      <div style="color:#555;font-size:10px;">${venueAddr}</div>
+    </div>
+
+    <!-- Contact box (footer) -->
+    <div style="width:100%;border:2px solid #c8860a;border-radius:8px;overflow:hidden;background:#fff9f0;margin-top:2px;">
+      <!-- Header bar -->
+      <div style="background:#c8860a;padding:4px 10px;">
+        <span style="font-size:13px;">📞</span>
+        <span style="font-weight:700;font-size:10.5px;color:#fff;text-decoration:underline;"> Contact / <span style="font-family:'Noto Serif Telugu',serif;">వివరాలకు:</span></span>
+      </div>
+      <!-- Contact rows -->
+      <div style="padding:5px 10px;display:flex;flex-direction:column;gap:3px;">
+        ${contact1n ? `<div style="font-size:10px;color:#111;padding-bottom:3px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact1n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact1p}</span></div>` : ""}
+        ${contact2n ? `<div style="font-size:10px;color:#111;padding-bottom:3px;border-bottom:1px dashed #f0d8a8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact2n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact2p}</span></div>` : ""}
+        ${contact3n ? `<div style="font-size:10px;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">👤 <b>${contact3n}</b> &nbsp;<span style="color:#c8860a;font-weight:600;">@${contact3p}</span></div>` : ""}
+      </div>
+    </div>
+  </div>
+
+</div>`;
+}
+
+function renderBulletin(root) {
+  _bulletinRows = BULLETIN_OOW_DEFAULTS.map(r => Object.assign({}, r));
+
+  // Default date = next Sunday
+  const today = new Date();
+  const daysToSunday = (7 - today.getDay()) % 7 || 7;
+  const nextSunday = new Date(today);
+  nextSunday.setDate(today.getDate() + daysToSunday);
+  const defaultDate = nextSunday.toISOString().slice(0, 10);
+
+  root.innerHTML = `
+<div id="bulletinForm" style="display:flex;flex-direction:column;gap:0;">
+
+  <!-- ===== TOP TOOLBAR ===== -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+    <span style="font-size:13px;font-weight:600;color:var(--text-dim);">Fill in the fields below, then export.</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="window.print()" class="btn-secondary" style="padding:8px 16px;font-size:13px;">🖨️ Print / PDF</button>
+      <button onclick="bulletinSaveImage()" class="btn-secondary" style="padding:8px 16px;font-size:13px;">🖼️ Save as Image</button>
+      <button onclick="bulletinCopyClipboard()" class="btn-primary" style="padding:8px 16px;font-size:13px;">📋 Copy to Clipboard</button>
+    </div>
+  </div>
+
+  <!-- ===== COMPACT SETTINGS STRIP (3 columns) ===== -->
+  <div class="form-card" style="margin-bottom:12px;padding:14px 16px;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px 16px;align-items:end;">
+
+      <!-- Col A -->
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Date
+        <input type="date" id="bulDate" value="${defaultDate}" style="margin-top:4px;display:block;width:100%;">
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Time
+        <input type="text" id="bulTime" value="4:00 PM to 6:00 PM" style="margin-top:4px;display:block;width:100%;">
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Pastor Name
+        <input type="text" id="bulPastor" value="James Ravinderan" style="margin-top:4px;display:block;width:100%;">
+      </label>
+
+      <!-- Col B -->
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Venue (English)
+        <input type="text" id="bulVenueEn" value="Tamil Methodist Church K L" style="margin-top:4px;display:block;width:100%;">
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Venue (Telugu)
+        <input type="text" id="bulVenueTl" value="తమిళ్ మెథడిస్ట్ చర్చ్, బ్రిక్ ఫీల్స్ కౌలాంపూర్" style="margin-top:4px;display:block;width:100%;font-family:'Noto Serif Telugu',sans-serif;">
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Address
+        <input type="text" id="bulVenueAddr" value="197, Jalan Sultan Abdul Samad, Brickfields, 50470, Kuala Lumpur" style="margin-top:4px;display:block;width:100%;">
+      </label>
+
+      <!-- Col C — scripture + church photo -->
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Scripture Banner (Telugu)
+        <textarea id="bulBannerTl" rows="2" style="margin-top:4px;display:block;width:100%;font-family:'Noto Serif Telugu',sans-serif;resize:none;">సమస్త దేశములారా, యెహోవాకు ఉత్సాహంధ్వని చేయుడి.</textarea>
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Scripture Ref
+        <input type="text" id="bulBannerRef" value="కీర్తనలు 100 : 1" style="margin-top:4px;display:block;width:100%;">
+      </label>
+      <label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.04em;">Church Photo
+        <div style="display:flex;gap:6px;align-items:center;margin-top:4px;">
+          <input type="text" id="bulChurchPhoto" value="" placeholder="URL or pick →" style="flex:1;min-width:0;display:block;">
+          <label style="margin:0;cursor:pointer;flex-shrink:0;">
+            <span class="btn-secondary" style="padding:5px 10px;font-size:11px;white-space:nowrap;display:inline-block;">📁</span>
+            <input type="file" id="bulChurchPhotoFile" accept="image/*" style="display:none;" onchange="const f=this.files[0];if(!f)return;const rd=new FileReader();rd.onload=e=>{document.getElementById('bulChurchPhoto').value=e.target.result;updateBulletinPreview();};rd.readAsDataURL(f);">
+          </label>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <!-- ===== MAIN 3-COLUMN EDITOR ===== -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">
+
+    <!-- LEFT: Order of Worship -->
+    <div class="form-card" style="padding:14px;display:flex;flex-direction:column;gap:0;">
+      <div class="section-head" style="margin-bottom:8px;">
+        <h2 style="font-size:13px;">Order of Worship</h2>
+        <button onclick="bulletinAddRow()" class="btn-secondary" style="padding:3px 10px;font-size:11px;">+ Add</button>
+      </div>
+      <div style="display:grid;grid-template-columns:15px 1fr 1fr auto;gap:8px;padding-bottom:4px;border-bottom:2px solid var(--line);margin-bottom:2px;">
+        <span></span>
+        <span style="font-size:10px;color:var(--text-dim);font-weight:600;text-transform:uppercase;">Label</span>
+        <span style="font-size:10px;color:var(--text-dim);font-weight:600;text-transform:uppercase;">Person</span>
+        <span></span>
+      </div>
+      <div id="bulRowsContainer" style="overflow-y:auto;max-height:340px;">${bulletinRowsHTML()}</div>
+    </div>
+
+    <!-- MIDDLE: Events + Verse -->
+    <div class="form-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+      <h2 style="font-size:13px;margin:0 0 4px;">Coming Events</h2>
+      <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Event Poster Image URL
+        <input type="url" id="bulEventImg" placeholder="https://... (optional)" style="margin-top:4px;display:block;width:100%;">
+      </label>
+      <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Reminder / Notice
+        <textarea id="bulReminder" rows="3" placeholder="e.g. TODAY: 2 offerings" style="margin-top:4px;display:block;width:100%;resize:vertical;"></textarea>
+      </label>
+
+      <div style="border-top:1px solid var(--line);padding-top:10px;">
+        <h2 style="font-size:13px;margin:0 0 8px;">Memory Verse</h2>
+        <label style="font-size:11px;color:var(--text-dim);font-weight:500;">English
+          <textarea id="bulVerseEn" rows="2" placeholder="English verse…" style="margin-top:4px;display:block;width:100%;resize:vertical;"></textarea>
+        </label>
+        <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:8px;display:block;">Telugu
+          <textarea id="bulVerseTl" rows="2" placeholder="తెలుగు వచనం…" style="margin-top:4px;display:block;width:100%;resize:vertical;font-family:'Noto Serif Telugu',sans-serif;"></textarea>
+        </label>
+        <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:8px;display:block;">Reference
+          <input type="text" id="bulVerseRef" placeholder="1 John 4:4 / 1 యోహాను 4:4" style="margin-top:4px;display:block;width:100%;">
+        </label>
+      </div>
+    </div>
+
+    <!-- RIGHT: Contacts -->
+    <div class="form-card" style="padding:14px;display:flex;flex-direction:column;gap:10px;">
+      <h2 style="font-size:13px;margin:0 0 4px;">Contact Persons</h2>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div>
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Contact 1 — Name
+            <input type="text" id="bulC1Name" value="Aunty Prameela K. / అంటి ప్రమీల కె.." style="margin-top:3px;display:block;width:100%;">
+          </label>
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:4px;display:block;">Phone
+            <input type="text" id="bulC1Phone" value="+6019-618-8343" style="margin-top:3px;display:block;width:100%;">
+          </label>
+        </div>
+        <div style="border-top:1px solid var(--line);padding-top:8px;">
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Contact 2 — Name
+            <input type="text" id="bulC2Name" value="Bro. Jesse Kanth / బ్రదర్ జెస్సే కాంత్" style="margin-top:3px;display:block;width:100%;">
+          </label>
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:4px;display:block;">Phone
+            <input type="text" id="bulC2Phone" value="+6011-35783152" style="margin-top:3px;display:block;width:100%;">
+          </label>
+        </div>
+        <div style="border-top:1px solid var(--line);padding-top:8px;">
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;">Contact 3 — Name
+            <input type="text" id="bulC3Name" value="Bro. Syam Anil / బ్రదర్ శ్యామ్ అనిల్" style="margin-top:3px;display:block;width:100%;">
+          </label>
+          <label style="font-size:11px;color:var(--text-dim);font-weight:500;margin-top:4px;display:block;">Phone
+            <input type="text" id="bulC3Phone" value="+6016-9856777" style="margin-top:3px;display:block;width:100%;">
+          </label>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /3-col editor -->
+
+  <!-- ===== PREVIEW PANEL (full width) ===== -->
+  <div class="bul-preview-label" style="font-size:11px;color:var(--text-dim);margin-bottom:6px;">📄 Live preview — updates as you type</div>
+  <div id="bulletinPreview" style="background:#fff;width:100%;aspect-ratio:297/210;border:2px solid #c8860a;box-shadow:0 6px 24px rgba(0,0,0,0.15);overflow:hidden;border-radius:6px;">
+  </div>
+
+</div>`;
+
+  // Initial render
+  updateBulletinPreview();
+
+  // Live update on any input/change in the form
+  document.getElementById("bulletinForm").addEventListener("input", updateBulletinPreview);
+  document.getElementById("bulletinForm").addEventListener("change", updateBulletinPreview);
+
+  // Sync-group: typing in one person field propagates to all rows in the same group
+  document.getElementById("bulRowsContainer").addEventListener("input", function(e) {
+    const inp = e.target;
+    const isEn = inp.classList.contains("bul-person-en");
+    const isTl = inp.classList.contains("bul-person-tl");
+    if (!isEn && !isTl) return;
+    const group = inp.dataset.syncGroup;
+    if (!group) return;
+    const cls = isEn ? "bul-person-en" : "bul-person-tl";
+    document.querySelectorAll(`#bulRowsContainer .${cls}[data-sync-group="${group}"]`).forEach(el => {
+      if (el !== inp) el.value = inp.value;
+    });
+  });
+}
+
+// ── Bulletin: reload all preview images with crossOrigin before capture ──────
+function waitForBulletinImages() {
+  const el = document.getElementById("bulletinPreview");
+  if (!el) return Promise.resolve();
+  const imgs = Array.from(el.querySelectorAll("img"));
+  return Promise.all(imgs.map(img => new Promise(resolve => {
+    const fresh = new Image();
+    fresh.crossOrigin = "anonymous";
+    fresh.onload = () => { img.src = fresh.src; resolve(); };
+    fresh.onerror = () => resolve(); // skip images that fail CORS — don't block export
+    fresh.src = img.src + (img.src.includes("?") ? "&" : "?") + "_cors=" + Date.now();
+  })));
+}
+
+// ── Bulletin: Save as Image ──────────────────────────────────────────────────
+async function bulletinSaveImage() {
+  const el = document.getElementById("bulletinPreview");
+  if (!el) return;
+  const btn = document.querySelector("button[onclick='bulletinSaveImage()']");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Generating…"; }
+  try {
+    await waitForBulletinImages();
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, allowTaint: false, backgroundColor: "#ffffff" });
+    const link = document.createElement("a");
+    link.download = "KLTF-Bulletin.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  } catch (err) {
+    alert("Image export failed: " + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "🖼️ Save as Image"; }
+  }
+}
+
+// ── Bulletin: Copy to Clipboard ──────────────────────────────────────────────
+async function bulletinCopyClipboard() {
+  const el = document.getElementById("bulletinPreview");
+  if (!el) return;
+  const btn = document.querySelector("button[onclick='bulletinCopyClipboard()']");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ Copying…"; }
+  try {
+    await waitForBulletinImages();
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, allowTaint: false, backgroundColor: "#ffffff" });
+    canvas.toBlob(blob => {
+      if (!blob) { alert("Could not create image blob."); return; }
+      navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob })
+      ]).then(() => {
+        if (btn) btn.textContent = "✅ Copied!";
+        setTimeout(() => { if (btn) btn.textContent = "📋 Copy to Clipboard"; }, 2000);
+      }).catch(err => {
+        alert("Clipboard write failed: " + err.message);
+      });
+    }, "image/png");
+  } catch (err) {
+    alert("Image render failed: " + err.message);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
