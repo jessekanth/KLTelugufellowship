@@ -2015,7 +2015,7 @@ function updateBulletinPreview() {
   <div style="padding:8px 10px;border:2px solid #c8860a;display:flex;flex-direction:column;align-items:center;gap:3px;overflow:hidden;">
     <!-- Scripture banner -->
     <div style="width:100%;background:#fff9f0;border:1px solid #f0d8a8;border-radius:4px;padding:4px 8px;flex-shrink:0;">
-      <div style="font-size:12.5px;text-align:center;color:#444;line-height:1.3;font-family:'Noto Serif Telugu',serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${bannerTl}</div>
+      <div style="font-size:12.5px;text-align:center;color:#444;line-height:1.3;font-family:'Noto Serif Telugu',serif;max-height:33px;overflow:hidden;word-break:break-word;">${bannerTl}</div>
       <div style="font-size:10px;font-weight:700;color:#c8860a;text-align:right;font-family:'Noto Serif Telugu',serif;margin-top:1px;">${bannerRef}</div>
     </div>
 
@@ -2030,9 +2030,7 @@ function updateBulletinPreview() {
 
     <!-- Church photo -->
     <div style="width:100%;height:58px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
-      ${churchPhoto
-        ? `<img src="${churchPhoto}" alt="Church" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:10px;background:#eee;">Church photo</span>`
-        : `<span style="color:#aaa;font-size:10px;">Add church photo URL</span>`}
+      <img src="${churchPhoto || 'church-photo.jpg'}" alt="Church" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:10px;background:#eee;">Add church-photo.jpg or paste a URL above</span>
       <!-- Pastor bar -->
       <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(22,101,52,0.90);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:0.02em;">Sr. Pas. Rev. ${pastorName}</div>
     </div>
