@@ -2020,7 +2020,7 @@ function updateBulletinPreview() {
     </div>
 
     <!-- Logo -->
-    <img src="kltf-logo.png" alt="KLTF Logo" crossorigin="anonymous" style="width:76px;height:76px;flex-shrink:0;border-radius:50%;object-fit:contain;background:#fff;border:2px solid #c8860a;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;box-shadow:0 2px 6px rgba(200,134,10,0.18);">
+    <img src="kltf-logo.png" alt="KLTF Logo" crossorigin="anonymous" style="width:90px;height:90px;flex-shrink:0;border-radius:50%;object-fit:contain;background:#fff;border:2px solid #c8860a;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges;box-shadow:0 2px 6px rgba(200,134,10,0.18);">
 
     <!-- Title + Church name -->
     <div style="text-align:center;flex-shrink:0;">
@@ -2029,7 +2029,7 @@ function updateBulletinPreview() {
     </div>
 
     <!-- Church photo -->
-    <div style="width:100%;height:120px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
+    <div style="width:100%;height:200px;overflow:hidden;background:#eee;display:flex;align-items:center;justify-content:center;position:relative;border-radius:4px;flex-shrink:0;">
       <img src="${churchPhoto || 'church-photo.jpg'}" alt="Church" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#aaa;font-size:10px;background:#eee;">Add church-photo.jpg or paste a URL above</span>
       <!-- Pastor bar -->
       <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(22,101,52,0.90);color:#fff;font-size:10px;font-weight:700;text-align:center;padding:3px 0;letter-spacing:0.02em;">Sr. Pas. Rev. ${pastorName}</div>
